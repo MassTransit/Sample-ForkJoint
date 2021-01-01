@@ -1,0 +1,13 @@
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+WORKDIR /src
+COPY ["ForkJoint.Api/ForkJoint.Api.csproj", "ForkJoint.Api/"]
+COPY ["ForkJoint.Contracts/ForkJoint.Contracts.csproj", "ForkJoint.Contracts/"]
+RUN dotnet restore "ForkJoint.Api/ForkJoint.Api.csproj"
+
+COPY . .
+RUN dotnet publish -c Release -o /app ForkJoint.Api/ForkJoint.Api.csproj 
+
+FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS publish
+WORKDIR /app
+COPY --from=build /app ./
+ENTRYPOINT ["dotnet", "ForkJoint.Api.dll"]
