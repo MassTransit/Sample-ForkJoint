@@ -3,6 +3,7 @@ namespace ForkJoint.Api
     using System;
     using System.Linq;
     using System.Threading.Tasks;
+    using Components.Activities;
     using Components.Consumers;
     using Contracts;
     using MassTransit;
@@ -43,6 +44,8 @@ namespace ForkJoint.Api
 
                     x.AddConsumersFromNamespaceContaining<SubmitOrderConsumer>();
 
+                    x.AddActivitiesFromNamespaceContaining<CourierActivities>();
+
                     x.UsingRabbitMq((context, cfg) =>
                     {
                         cfg.SetCustomEntityNameFormatter();
@@ -52,15 +55,9 @@ namespace ForkJoint.Api
 
                         cfg.UseRabbitMqMessageScheduler();
 
-                        var options = new ServiceInstanceOptions();
-
-                        cfg.ServiceInstance(options, instance =>
-                        {
-                            instance.ConfigureEndpoints(context);
-                        });
+                        cfg.ConfigureEndpoints(context);
                     });
 
-                    x.AddServiceClient();
                     x.AddRequestClient<SubmitOrder>();
                 })
                 .AddMassTransitHostedService();
