@@ -1,4 +1,4 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts.Extensions
 {
     using System;
     using System.Linq;

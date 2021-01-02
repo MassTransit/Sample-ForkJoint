@@ -7,7 +7,6 @@ namespace ForkJoint.Api
     using Components.Consumers;
     using Contracts;
     using MassTransit;
-    using MassTransit.Conductor;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Diagnostics.HealthChecks;
     using Microsoft.AspNetCore.Hosting;
@@ -39,7 +38,8 @@ namespace ForkJoint.Api
         {
             services.AddMassTransit(x =>
                 {
-                    x.SetKebabCaseEndpointNameFormatter();
+                    x.ApplyCustomMassTransitConfiguration();
+
                     x.AddRabbitMqMessageScheduler();
 
                     x.AddConsumersFromNamespaceContaining<SubmitOrderConsumer>();
@@ -48,7 +48,11 @@ namespace ForkJoint.Api
 
                     x.UsingRabbitMq((context, cfg) =>
                     {
-                        cfg.SetCustomEntityNameFormatter();
+                        // Controllers are using the request client, so we may as well
+                        // start the bus receive endpoint
+                        cfg.AutoStart = true;
+
+                        cfg.ApplyCustomBusConfiguration();
 
                         if (IsRunningInContainer)
                             cfg.Host("rabbitmq");
