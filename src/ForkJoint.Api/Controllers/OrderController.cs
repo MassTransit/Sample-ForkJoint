@@ -1,5 +1,6 @@
 ﻿namespace ForkJoint.Api.Controllers
 {
+    using System;
     using System.Threading.Tasks;
     using Contracts;
     using MassTransit;
@@ -36,19 +37,27 @@
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Post(OrderModel order)
         {
-            Response response = await _client.GetResponse<OrderSubmissionAccepted>(new
+            try
             {
-                order.OrderId,
-            });
-
-            return response switch
-            {
-                (_, OrderSubmissionAccepted accepted) => Accepted(new SubmitOrderResponseModel()
+                Response response = await _client.GetResponse<OrderSubmissionAccepted>(new
                 {
-                    OrderId = order.OrderId
-                }),
-                _ => BadRequest()
-            };
+                    order.OrderId,
+                    order.Lettuce
+                });
+
+                return response switch
+                {
+                    (_, OrderSubmissionAccepted accepted) => Accepted(new SubmitOrderResponseModel()
+                    {
+                        OrderId = order.OrderId,
+                    }),
+                    _ => BadRequest()
+                };
+            }
+            catch (Exception exception) when (exception.Message.Contains("lettuce",StringComparison.InvariantCultureIgnoreCase))
+            {
+                return Problem();
+            }
         }
     }
 }

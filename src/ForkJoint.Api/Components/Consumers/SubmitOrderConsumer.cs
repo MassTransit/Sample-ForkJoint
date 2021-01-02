@@ -105,7 +105,7 @@ namespace ForkJoint.Api.Components.Consumers
             builder.AddActivity("dress-burger", new Uri($"queue:{dressQueueName}"), new
             {
                 Ketchup = true,
-                Lettuce = true,
+                context.Message.Lettuce,
             });
 
             return builder.Build();

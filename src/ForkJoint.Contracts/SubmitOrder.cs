@@ -10,6 +10,8 @@
     {
         Guid OrderId { get; }
 
+        bool Lettuce { get; }
+
         [ModuleInitializer]
         internal static void Init()
         {

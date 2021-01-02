@@ -1,5 +1,6 @@
 namespace ForkJoint.Api.Components.Activities.DressBurger
 {
+    using System;
     using System.Threading.Tasks;
     using MassTransit.Courier;
     using Microsoft.Extensions.Logging;
@@ -17,7 +18,11 @@ namespace ForkJoint.Api.Components.Activities.DressBurger
 
         public async Task<ExecutionResult> Execute(ExecuteContext<DressBurgerArguments> context)
         {
-            _logger.LogDebug("Dressing Burger: {OrderId} {Ketchup}", context.Arguments.OrderId, context.Arguments.Ketchup);
+            _logger.LogDebug("Dressing Burger: {OrderId} {Ketchup} {Lettuce}", context.Arguments.OrderId, context.Arguments.Ketchup,
+                context.Arguments.Lettuce);
+
+            if (context.Arguments.Lettuce)
+                throw new InvalidOperationException("No lettuce available");
 
             await Task.Delay(1000);
 

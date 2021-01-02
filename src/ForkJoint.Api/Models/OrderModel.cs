@@ -8,5 +8,7 @@ namespace ForkJoint.Api.Models
     {
         [Required]
         public Guid OrderId { get; init; }
+
+        public bool Lettuce { get; init; }
     }
 }
