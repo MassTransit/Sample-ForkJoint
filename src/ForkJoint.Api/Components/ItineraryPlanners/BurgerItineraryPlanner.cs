@@ -19,7 +19,7 @@ namespace ForkJoint.Api.Components.ItineraryPlanners
             _dressAddress = new Uri($"exchange:{formatter.ExecuteActivity<DressBurgerActivity, DressBurgerArguments>()}");
         }
 
-        public void ProduceItinerary(Burger burger, ItineraryBuilder builder)
+        public void PlanItinerary(Burger burger, ItineraryBuilder builder)
         {
             builder.AddActivity(nameof(GrillBurgerActivity), _grillAddress, new
             {

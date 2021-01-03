@@ -25,7 +25,7 @@ namespace ForkJoint.Api.Components.Activities
             return context.CompletedWithVariables<GrillBurgerLog>(new {patty}, new {patty});
         }
 
-        public async Task<CompensationResult> Compensate(CompensateContext<GrillBurgerLog> context)
+        public Task<CompensationResult> Compensate(CompensateContext<GrillBurgerLog> context)
         {
             var patty = context.Log.Patty;
 
@@ -33,7 +33,7 @@ namespace ForkJoint.Api.Components.Activities
 
             _grill.Add(patty);
 
-            return context.Compensated();
+            return Task.FromResult(context.Compensated());
         }
     }
 }

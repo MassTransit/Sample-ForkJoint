@@ -3,9 +3,11 @@ namespace ForkJoint.Api
     using System;
     using System.Linq;
     using System.Threading.Tasks;
+    using Automatonymous.Requests;
     using Components.Activities;
     using Components.Consumers;
     using Components.ItineraryPlanners;
+    using Components.StateMachines;
     using Contracts;
     using MassTransit;
     using Microsoft.AspNetCore.Builder;
@@ -52,6 +54,12 @@ namespace ForkJoint.Api
 
                     x.AddActivitiesFromNamespaceContaining<GrillBurgerActivity>();
 
+                    x.AddSagaStateMachine<BurgerStateMachine, BurgerState>(typeof(BurgerSagaDefinition))
+                        .InMemoryRepository();
+
+                    x.AddSagaStateMachine<RequestStateMachine, RequestState>(typeof(RequestSagaDefinition))
+                        .InMemoryRepository();
+
                     x.UsingRabbitMq((context, cfg) =>
                     {
                         // Controllers are using the request client, so we may as well
@@ -69,6 +77,7 @@ namespace ForkJoint.Api
                     });
 
                     x.AddRequestClient<SubmitOrder>();
+                    x.AddRequestClient<RequestBurger>();
                 })
                 .AddMassTransitHostedService();
 

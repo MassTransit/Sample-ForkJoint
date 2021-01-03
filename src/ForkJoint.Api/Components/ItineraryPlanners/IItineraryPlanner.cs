@@ -5,6 +5,6 @@ namespace ForkJoint.Api.Components.ItineraryPlanners
 
     public interface IItineraryPlanner<in T>
     {
-        void ProduceItinerary(T value, ItineraryBuilder builder);
+        void PlanItinerary(T value, ItineraryBuilder builder);
     }
 }

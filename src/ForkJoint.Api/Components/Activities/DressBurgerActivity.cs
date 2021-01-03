@@ -35,6 +35,7 @@ namespace ForkJoint.Api.Components.Activities
 
             var burger = new Burger
             {
+                BurgerId = arguments.BurgerId,
                 Weight = patty.Weight,
                 Cheese = patty.Cheese,
                 Lettuce = arguments.Lettuce,

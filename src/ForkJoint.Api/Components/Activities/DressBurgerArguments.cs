@@ -7,6 +7,7 @@ namespace ForkJoint.Api.Components.Activities
     public interface DressBurgerArguments
     {
         Guid OrderId { get; }
+        Guid BurgerId { get; }
 
         BurgerPatty Patty { get; }
 

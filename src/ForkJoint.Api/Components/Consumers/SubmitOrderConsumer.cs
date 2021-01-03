@@ -1,37 +1,68 @@
 namespace ForkJoint.Api.Components.Consumers
 {
+    using System;
     using System.Linq;
     using System.Threading.Tasks;
     using Contracts;
-    using ItineraryPlanners;
     using MassTransit;
-    using MassTransit.Courier;
+    using Microsoft.Extensions.Logging;
 
 
     public class SubmitOrderConsumer :
-        RoutingSlipRequestConsumer<SubmitOrder>
+        IConsumer<SubmitOrder>
     {
-        readonly IItineraryPlanner<Burger> _planner;
+        readonly IRequestClient<RequestBurger> _client;
+        readonly ILogger<SubmitOrderConsumer> _logger;
 
-        public SubmitOrderConsumer(IItineraryPlanner<Burger> planner, IEndpointNameFormatter formatter)
-            : base(formatter.Consumer<SubmitOrderResponseConsumer>())
+        public SubmitOrderConsumer(IRequestClient<RequestBurger> client, ILogger<SubmitOrderConsumer> logger)
         {
-            _planner = planner;
+            _client = client;
+            _logger = logger;
         }
 
-        protected override Task BuildItinerary(RoutingSlipBuilder builder, ConsumeContext<SubmitOrder> context)
+        public async Task Consume(ConsumeContext<SubmitOrder> context)
         {
-            builder.AddVariable("OrderId", context.Message.OrderId);
-
-            if (context.ExpirationTime.HasValue)
-                builder.AddVariable("Deadline", context.ExpirationTime.Value);
-
             var burger = context.Message.Burgers.FirstOrDefault();
+            if (burger == null)
+                throw new InvalidOperationException("There were no burgers to make!");
 
-            if (burger != null)
-                _planner.ProduceItinerary(burger, builder);
+            _logger.LogInformation("Submit Order Request ID: {RequestId}", context.RequestId);
 
-            return Task.CompletedTask;
+            try
+            {
+                Response<BurgerCompleted, BurgerNotCompleted> response = await _client.GetResponse<BurgerCompleted, BurgerNotCompleted>(new
+                {
+                    context.Message.OrderId,
+                    Burger = burger
+                });
+
+                if (response.Is(out Response<BurgerCompleted> completed))
+                {
+                    await context.RespondAsync<OrderCompleted>(new
+                    {
+                        context.Message.OrderId,
+                        completed.Message.Burger
+                    });
+                }
+                else if (response.Is(out Response<BurgerNotCompleted> notCompleted))
+                {
+                    await context.RespondAsync<OrderNotCompleted>(new
+                    {
+                        context.Message.OrderId,
+                        context.Message.Burgers,
+                        notCompleted.Message.Reason
+                    });
+                }
+            }
+            catch (RequestException exception)
+            {
+                await context.RespondAsync<OrderNotCompleted>(new
+                {
+                    context.Message.OrderId,
+                    context.Message.Burgers,
+                    Reason = exception.Message,
+                });
+            }
         }
     }
 }
