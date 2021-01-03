@@ -1,12 +1,10 @@
 ﻿namespace ForkJoint.Api.Controllers
 {
-    using System;
     using System.Threading.Tasks;
     using Contracts;
     using MassTransit;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Extensions.Logging;
     using Models;
 
 
@@ -16,47 +14,52 @@
         ControllerBase
     {
         readonly IRequestClient<SubmitOrder> _client;
-        readonly ILogger<OrderController> _logger;
 
-        public OrderController(ILogger<OrderController> logger, IRequestClient<SubmitOrder> client)
+        public OrderController(IRequestClient<SubmitOrder> client)
         {
-            _logger = logger;
             _client = client;
         }
 
         /// <summary>
         /// Submits an order
         /// <param name="order">The order model</param>
-        /// <response code="202">The order has been accepted</response>
-        /// <response code="422">The order could not be processed</response>
+        /// <response code="200">The order has been completed</response>
+        /// <response code="202">The order has been accepted but not yet completed</response>
+        /// <response code="400">The order could not be completed</response>
         /// </summary>
         /// <param name="order"></param>
         /// <returns></returns>
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status202Accepted)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Post(OrderModel order)
+        public async Task<IActionResult> Post(Order order)
         {
             try
             {
-                Response response = await _client.GetResponse<OrderSubmissionAccepted>(new
+                Response response = await _client.GetResponse<OrderCompleted, OrderNotCompleted>(new
                 {
                     order.OrderId,
-                    order.Lettuce
+                    order.Burgers
                 });
 
                 return response switch
                 {
-                    (_, OrderSubmissionAccepted accepted) => Accepted(new SubmitOrderResponseModel()
+                    (_, OrderCompleted completed) => Ok(new OrderResponseModel
                     {
                         OrderId = order.OrderId,
+                        Burger = completed.Burger
                     }),
+                    (_, OrderNotCompleted notCompleted) => BadRequest(notCompleted.Reason),
                     _ => BadRequest()
                 };
             }
-            catch (Exception exception) when (exception.Message.Contains("lettuce",StringComparison.InvariantCultureIgnoreCase))
+            catch (RequestTimeoutException)
             {
-                return Problem();
+                return Accepted(new
+                {
+                    order.OrderId
+                });
             }
         }
     }

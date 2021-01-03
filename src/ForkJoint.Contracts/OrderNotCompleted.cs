@@ -6,14 +6,18 @@ namespace ForkJoint.Contracts
     using MassTransit.Topology.Topologies;
 
 
-    public interface OrderSubmissionAccepted
+    public interface OrderNotCompleted
     {
         Guid OrderId { get; }
+
+        string Reason { get; }
+
+        Burger[] Burgers { get; }
 
         [ModuleInitializer]
         internal static void Init()
         {
-            GlobalTopology.Send.UseCorrelationId<OrderSubmissionAccepted>(x => x.OrderId);
+            GlobalTopology.Send.UseCorrelationId<OrderNotCompleted>(x => x.OrderId);
         }
     }
 }

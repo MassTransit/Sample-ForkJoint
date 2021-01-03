@@ -5,6 +5,7 @@ namespace ForkJoint.Api
     using System.Threading.Tasks;
     using Components.Activities;
     using Components.Consumers;
+    using Components.ItineraryPlanners;
     using Contracts;
     using MassTransit;
     using Microsoft.AspNetCore.Builder;
@@ -13,11 +14,13 @@ namespace ForkJoint.Api
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Diagnostics.HealthChecks;
     using Microsoft.Extensions.Hosting;
     using Microsoft.OpenApi.Models;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
+    using Services;
 
 
     public class Startup
@@ -36,6 +39,9 @@ namespace ForkJoint.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.TryAddScoped<IItineraryPlanner<Burger>, BurgerItineraryPlanner>();
+            services.TryAddSingleton<IGrill, Grill>();
+
             services.AddMassTransit(x =>
                 {
                     x.ApplyCustomMassTransitConfiguration();
@@ -44,7 +50,7 @@ namespace ForkJoint.Api
 
                     x.AddConsumersFromNamespaceContaining<SubmitOrderConsumer>();
 
-                    x.AddActivitiesFromNamespaceContaining<CourierActivities>();
+                    x.AddActivitiesFromNamespaceContaining<GrillBurgerActivity>();
 
                     x.UsingRabbitMq((context, cfg) =>
                     {

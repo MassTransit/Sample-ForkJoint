@@ -1,14 +1,16 @@
-namespace ForkJoint.Api.Components.Activities.GrillBurger
+namespace ForkJoint.Api.Components.Activities
 {
     using System;
+    using Contracts;
 
 
     public interface GrillBurgerArguments
     {
         Guid OrderId { get; }
 
+        BurgerPatty Patty { get; }
+
         decimal Weight { get; }
-        decimal Temperature { get; }
         bool Cheese { get; }
     }
 }

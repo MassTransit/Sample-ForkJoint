@@ -1,4 +1,4 @@
-namespace ForkJoint.Api.Components.Activities.DressBurger
+namespace ForkJoint.Api.Components.Activities
 {
     using System;
     using Contracts;
@@ -11,7 +11,9 @@ namespace ForkJoint.Api.Components.Activities.DressBurger
         BurgerPatty Patty { get; }
 
         bool Lettuce { get; }
-        bool Pickles { get; }
+        bool Pickle { get; }
+        bool Onion { get; }
         bool Ketchup { get; }
+        bool Mustard { get; }
     }
 }

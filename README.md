@@ -1,6 +1,6 @@
 # Fork Joint
 
-Fork Joint is a fictional restaurant built during Season 3 of the MassTransit Live Code Video Series.
+Fork Joint is a fictional restaurant built during Season 3 of the MassTransit Live Code Video Series. You can [watch the episodes on YouTube](https://youtube.com/playlist?list=PLx8uyNNs1ri2JeyDGFWfCYyAjOB1GP-t1) and follow along by resetting to the various commits in the Git history.
 
 
 
@@ -34,3 +34,14 @@ You may need to modify the `docker-compose.yml` file to match your path for Wind
 
 [See this page](https://docs.microsoft.com/en-us/aspnet/core/security/docker-https?view=aspnetcore-5.0) for more information, it was used to get this working on my machine.
 
+
+
+## Design Diagrams
+
+### Request Response
+
+![Request Response](https://raw.githubusercontent.com/MassTransit/MassTransit/master/assets/requestResponse.svg "Request Response")
+
+### Routing Slip
+
+![Routing Slip](https://raw.githubusercontent.com/MassTransit/MassTransit/master/assets/routingSlip.svg "Routing Slip")
