@@ -40,8 +40,8 @@ You may need to modify the `docker-compose.yml` file to match your path for Wind
 
 ### Request Response
 
-![Request Response](https://raw.githubusercontent.com/MassTransit/MassTransit/master/assets/requestResponse.svg "Request Response")
+![Request Response](https://raw.githubusercontent.com/MassTransit/Sample-ForkJoint/master/assets/requestResponse.svg "Request Response")
 
 ### Routing Slip
 
-![Routing Slip](https://raw.githubusercontent.com/MassTransit/MassTransit/master/assets/routingSlip.svg "Routing Slip")
+![Routing Slip](https://raw.githubusercontent.com/MassTransit/Sample-ForkJoint/master/assets/routingSlip.svg "Routing Slip")
