@@ -4,11 +4,13 @@ namespace ForkJoint.Contracts
     using System.Collections.Generic;
 
 
-    public interface OrderCompleted :
-        FutureCompleted
+    public interface OrderFaulted :
+        FutureFaulted
     {
         Guid OrderId { get; }
 
         IDictionary<Guid, OrderLineCompleted> LinesCompleted { get; }
+
+        IDictionary<Guid, OrderLineFaulted> LinesFaulted { get; }
     }
 }

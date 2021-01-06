@@ -25,9 +25,13 @@ namespace ForkJoint.Api.Components.StateMachines
 
             IPartitioner partitioner = new Partitioner(partitionCount, new Murmur3UnsafeHashGenerator());
 
-            endpointConfigurator.UsePartitioner<RequestStarted>(partitioner, x => x.Message.RequestId);
+            endpointConfigurator.UsePartitioner<RequestStarted>(partitioner, x => x.Message.CorrelationId);
             endpointConfigurator.UsePartitioner<RequestCompleted>(partitioner, x => x.Message.CorrelationId);
             endpointConfigurator.UsePartitioner<RequestFaulted>(partitioner, x => x.Message.CorrelationId);
+
+            endpointConfigurator.UseScheduledRedelivery(r => r.Intervals(1000));
+            endpointConfigurator.UseMessageRetry(r => r.Intervals(100));
+            endpointConfigurator.UseInMemoryOutbox();
         }
     }
 }

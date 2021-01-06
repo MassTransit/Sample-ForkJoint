@@ -1,5 +1,6 @@
 ﻿namespace ForkJoint.Api.Controllers
 {
+    using System.Linq;
     using System.Threading.Tasks;
     using Contracts;
     using MassTransit;
@@ -37,7 +38,7 @@
         {
             try
             {
-                Response response = await _client.GetResponse<OrderCompleted, OrderNotCompleted>(new
+                Response response = await _client.GetResponse<OrderCompleted, OrderFaulted>(new
                 {
                     order.OrderId,
                     order.Burgers
@@ -45,12 +46,37 @@
 
                 return response switch
                 {
-                    (_, OrderCompleted completed) => Ok(new OrderResponseModel
+                    (_, OrderCompleted completed) => Ok(new
                     {
-                        OrderId = order.OrderId,
-                        Burger = completed.Burger
+                        completed.OrderId,
+                        completed.Created,
+                        completed.Completed,
+                        LinesCompleted = completed.LinesCompleted.ToDictionary(x => x.Key, x => new
+                        {
+                            x.Value.Created,
+                            x.Value.Completed,
+                            x.Value.Description,
+                        })
                     }),
-                    (_, OrderNotCompleted notCompleted) => BadRequest(notCompleted.Reason),
+                    (_, OrderFaulted faulted) => BadRequest(new
+                    {
+                        faulted.OrderId,
+                        faulted.Created,
+                        faulted.Faulted,
+                        LinesCompleted = faulted.LinesCompleted.ToDictionary(x => x.Key, x => new
+                        {
+                            x.Value.Created,
+                            x.Value.Completed,
+                            x.Value.Description,
+                        }),
+                        LinesFaulted = faulted.LinesFaulted.ToDictionary(x => x.Key, x => new
+                        {
+                            x.Value.Created,
+                            x.Value.Faulted,
+                            x.Value.Description,
+                            Reason = x.Value.ExceptionInfo.Message,
+                        })
+                    }),
                     _ => BadRequest()
                 };
             }
@@ -58,7 +84,8 @@
             {
                 return Accepted(new
                 {
-                    order.OrderId
+                    order.OrderId,
+                    Accepted = order.Burgers.Select(x => x.BurgerId).ToArray()
                 });
             }
         }

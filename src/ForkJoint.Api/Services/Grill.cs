@@ -32,7 +32,7 @@ namespace ForkJoint.Api.Services
 
             _logger.LogDebug("Grilling patty {Weight} {Cheese}", weight, cheese);
 
-            await Task.Delay(5000);
+            await Task.Delay(5000 + (int)(1000.0m * weight));
 
             var patty = new BurgerPatty
             {

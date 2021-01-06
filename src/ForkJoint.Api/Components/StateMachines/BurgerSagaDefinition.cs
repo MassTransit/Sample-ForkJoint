@@ -25,16 +25,20 @@ namespace ForkJoint.Api.Components.StateMachines
             if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator rabbit)
             {
                 endpointConfigurator.ConfigureConsumeTopology = false;
-                rabbit.Bind<RequestBurger>();
+                rabbit.Bind<OrderBurger>();
             }
 
             var partitionCount = ConcurrentMessageLimit ?? Environment.ProcessorCount * 4;
 
             IPartitioner partitioner = new Partitioner(partitionCount, new Murmur3UnsafeHashGenerator());
 
-            endpointConfigurator.UsePartitioner<RequestBurger>(partitioner, x => x.Message.Burger.BurgerId);
+            endpointConfigurator.UsePartitioner<OrderBurger>(partitioner, x => x.Message.Burger.BurgerId);
             endpointConfigurator.UsePartitioner<RoutingSlipCompleted>(partitioner, x => x.Message.TrackingNumber);
             endpointConfigurator.UsePartitioner<RoutingSlipFaulted>(partitioner, x => x.Message.TrackingNumber);
+
+            endpointConfigurator.UseScheduledRedelivery(r => r.Intervals(1000, 5000, 10000, 10000, 10000));
+            endpointConfigurator.UseMessageRetry(r => r.Intervals(100, 500));
+            endpointConfigurator.UseInMemoryOutbox();
         }
     }
 }

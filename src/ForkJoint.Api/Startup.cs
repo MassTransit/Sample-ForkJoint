@@ -2,10 +2,11 @@ namespace ForkJoint.Api
 {
     using System;
     using System.Linq;
+    using System.Reflection;
     using System.Threading.Tasks;
     using Automatonymous.Requests;
+    using Components;
     using Components.Activities;
-    using Components.Consumers;
     using Components.ItineraryPlanners;
     using Components.StateMachines;
     using Contracts;
@@ -50,15 +51,13 @@ namespace ForkJoint.Api
 
                     x.AddRabbitMqMessageScheduler();
 
-                    x.AddConsumersFromNamespaceContaining<SubmitOrderConsumer>();
+                    x.SetInMemorySagaRepositoryProvider();
 
                     x.AddActivitiesFromNamespaceContaining<GrillBurgerActivity>();
 
-                    x.AddSagaStateMachine<BurgerStateMachine, BurgerState>(typeof(BurgerSagaDefinition))
-                        .InMemoryRepository();
-
-                    x.AddSagaStateMachine<RequestStateMachine, RequestState>(typeof(RequestSagaDefinition))
-                        .InMemoryRepository();
+                    x.AddSagaStateMachine(typeof(OrderStateMachine), typeof(OrderSagaDefinition));
+                    x.AddSagaStateMachine(typeof(BurgerStateMachine), typeof(BurgerSagaDefinition));
+                    x.AddSagaStateMachine(typeof(RequestStateMachine), typeof(RequestSagaDefinition));
 
                     x.UsingRabbitMq((context, cfg) =>
                     {
@@ -77,7 +76,6 @@ namespace ForkJoint.Api
                     });
 
                     x.AddRequestClient<SubmitOrder>();
-                    x.AddRequestClient<RequestBurger>();
                 })
                 .AddMassTransitHostedService();
 
