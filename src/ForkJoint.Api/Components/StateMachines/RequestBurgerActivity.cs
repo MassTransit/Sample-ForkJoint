@@ -1,6 +1,7 @@
 namespace ForkJoint.Api.Components.StateMachines
 {
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
     using Automatonymous;
     using Contracts;
@@ -25,16 +26,25 @@ namespace ForkJoint.Api.Components.StateMachines
         {
             ConsumeEventContext<OrderState, SubmitOrder> consumeContext = context.CreateConsumeContext();
 
-            foreach (var burger in context.Data.Burgers)
+            await Task.WhenAll(context.Data.Burgers.Select(burger => consumeContext.Publish<OrderBurger>(new
             {
-                await consumeContext.Publish<OrderBurger>(new
-                {
-                    context.Data.OrderId,
-                    Burger = burger,
-                    __RequestId = InVar.Id,
-                    __ResponseAddress = consumeContext.ReceiveContext.InputAddress
-                });
-            }
+                context.Data.OrderId,
+                Burger = burger,
+                __RequestId = InVar.Id,
+                __ResponseAddress = consumeContext.ReceiveContext.InputAddress
+            })));
+
+            // THIS IS SLOW
+            // foreach (var burger in context.Data.Burgers)
+            // {
+            //     await consumeContext.Publish<OrderBurger>(new
+            //     {
+            //         context.Data.OrderId,
+            //         Burger = burger,
+            //         __RequestId = InVar.Id,
+            //         __ResponseAddress = consumeContext.ReceiveContext.InputAddress
+            //     });
+            // }
 
             await next.Execute(context);
         }
