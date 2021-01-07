@@ -11,10 +11,14 @@ namespace ForkJoint.Api
     using Components.StateMachines;
     using Contracts;
     using MassTransit;
+    using MassTransit.EntityFrameworkCoreIntegration;
+    using MassTransit.EntityFrameworkCoreIntegration.Configurators;
+    using MassTransit.EntityFrameworkCoreIntegration.JobService;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Diagnostics.HealthChecks;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Http;
+    using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -45,13 +49,26 @@ namespace ForkJoint.Api
             services.TryAddScoped<IItineraryPlanner<Burger>, BurgerItineraryPlanner>();
             services.TryAddSingleton<IGrill, Grill>();
 
+            services.AddDbContext<ForkJointSagaDbContext>(builder =>
+                builder.UseSqlServer(GetConnectionString(), m =>
+                {
+                    m.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name);
+                    m.MigrationsHistoryTable($"__{nameof(ForkJointSagaDbContext)}");
+                }));
+
             services.AddMassTransit(x =>
                 {
                     x.ApplyCustomMassTransitConfiguration();
 
                     x.AddRabbitMqMessageScheduler();
 
-                    x.SetInMemorySagaRepositoryProvider();
+                    x.SetEntityFrameworkSagaRepositoryProvider(r =>
+                    {
+                        r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
+                        r.LockStatementProvider = new SqlServerLockStatementProvider();
+
+                        r.ExistingDbContext<ForkJointSagaDbContext>();
+                    });
 
                     x.AddActivitiesFromNamespaceContaining<GrillBurgerActivity>();
 
@@ -88,6 +105,16 @@ namespace ForkJoint.Api
                     Version = "v1"
                 });
             });
+        }
+
+        string GetConnectionString()
+        {
+            var connectionString = Configuration.GetConnectionString("ForkJoint");
+
+            if (IsRunningInContainer)
+                connectionString = connectionString.Replace("localhost", "mssql");
+
+            return connectionString;
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
