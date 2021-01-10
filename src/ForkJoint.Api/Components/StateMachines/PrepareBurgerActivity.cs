@@ -76,6 +76,16 @@ namespace ForkJoint.Api.Components.StateMachines
 
             _planner.PlanItinerary(context.Instance.Burger, builder);
 
+            if (context.Instance.Burger.OnionRing)
+            {
+                await consumeContext.Publish<OrderOnionRings>(new
+                {
+                    context.Instance.OrderId,
+                    OrderLineId = context.Instance.Burger.BurgerId,
+                    Quantity = 1
+                });
+            }
+
             var routingSlip = builder.Build();
 
             await consumeContext.Execute(routingSlip).ConfigureAwait(false);

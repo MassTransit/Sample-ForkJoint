@@ -14,6 +14,8 @@ namespace ForkJoint.Contracts
         public bool Onion { get; init; } = true;
         public bool Ketchup { get; init; }
         public bool Mustard { get; init; } = true;
+        public bool BarbecueSauce { get; init; }
+        public bool OnionRing { get; init; }
 
         public override string ToString()
         {
@@ -33,6 +35,10 @@ namespace ForkJoint.Contracts
                 sb.Append(" Ketchup");
             if (Mustard)
                 sb.Append(" Mustard");
+            if (BarbecueSauce)
+                sb.Append(" BBQ");
+            if (OnionRing)
+                sb.Append(" OnionRing");
 
             return sb.ToString();
         }

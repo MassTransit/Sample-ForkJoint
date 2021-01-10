@@ -46,7 +46,7 @@ namespace ForkJoint.Api.Components.StateMachines
         {
             return binder
                 .Then(context => context.Instance.Completed = context.CreateConsumeContext().SentTime ?? DateTime.UtcNow)
-                .If(context => context.Instance.RequestId.HasValue,
+                .If(context => context.Instance.RequestId.HasValue && context.Instance.ResponseAddress != null,
                     respond => respond.SendAsync(context => context.Instance.ResponseAddress, asyncMessageFactory, (consumeContext, sendContext) =>
                     {
                         sendContext.RequestId = consumeContext.Instance.RequestId;
@@ -71,7 +71,7 @@ namespace ForkJoint.Api.Components.StateMachines
         {
             return binder
                 .Then(context => context.Instance.Faulted = context.CreateConsumeContext().SentTime ?? DateTime.UtcNow)
-                .If(context => context.Instance.RequestId.HasValue,
+                .If(context => context.Instance.RequestId.HasValue && context.Instance.ResponseAddress != null,
                     respond => respond.SendAsync(context => context.Instance.ResponseAddress, asyncMessageFactory, (consumeContext, sendContext) =>
                     {
                         sendContext.RequestId = consumeContext.Instance.RequestId;

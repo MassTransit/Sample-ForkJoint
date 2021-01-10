@@ -33,7 +33,9 @@ namespace ForkJoint.Api.Components.ItineraryPlanners
                 burger.Pickle,
                 burger.Onion,
                 burger.Ketchup,
-                burger.Mustard
+                burger.Mustard,
+                burger.BarbecueSauce,
+                burger.OnionRing
             });
         }
     }

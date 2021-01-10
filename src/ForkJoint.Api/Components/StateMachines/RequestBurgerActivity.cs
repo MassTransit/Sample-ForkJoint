@@ -32,7 +32,7 @@ namespace ForkJoint.Api.Components.StateMachines
                 Burger = burger,
                 __RequestId = InVar.Id,
                 __ResponseAddress = consumeContext.ReceiveContext.InputAddress
-            })));
+            }, context.CancellationToken)));
 
             // THIS IS SLOW
             // foreach (var burger in context.Data.Burgers)

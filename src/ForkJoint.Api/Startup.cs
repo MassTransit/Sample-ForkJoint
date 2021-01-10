@@ -7,13 +7,14 @@ namespace ForkJoint.Api
     using Automatonymous.Requests;
     using Components;
     using Components.Activities;
+    using Components.Consumers;
     using Components.ItineraryPlanners;
     using Components.StateMachines;
     using Contracts;
     using MassTransit;
     using MassTransit.EntityFrameworkCoreIntegration;
-    using MassTransit.EntityFrameworkCoreIntegration.Configurators;
-    using MassTransit.EntityFrameworkCoreIntegration.JobService;
+    using Microsoft.ApplicationInsights.DependencyCollector;
+    using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Diagnostics.HealthChecks;
     using Microsoft.AspNetCore.Hosting;
@@ -48,6 +49,19 @@ namespace ForkJoint.Api
         {
             services.TryAddScoped<IItineraryPlanner<Burger>, BurgerItineraryPlanner>();
             services.TryAddSingleton<IGrill, Grill>();
+            services.TryAddSingleton<IFryer, Fryer>();
+
+            services.AddApplicationInsightsTelemetry(options =>
+            {
+                options.EnableDependencyTrackingTelemetryModule = true;
+            });
+            services.AddApplicationInsightsTelemetryProcessor<NoSqlTelemetryProcessor>();
+
+            services.ConfigureTelemetryModule<DependencyTrackingTelemetryModule>((module, o) =>
+            {
+                module.IncludeDiagnosticSourceActivities.Add("MassTransit");
+            });
+            services.AddSingleton<ITelemetryInitializer, HttpDependenciesParsingTelemetryInitializer>();
 
             services.AddDbContext<ForkJointSagaDbContext>(builder =>
                 builder.UseSqlServer(GetConnectionString(), m =>
@@ -70,10 +84,15 @@ namespace ForkJoint.Api
                         r.ExistingDbContext<ForkJointSagaDbContext>();
                     });
 
+                    x.AddConsumersFromNamespaceContaining<FryOnionRingsConsumer>();
+
                     x.AddActivitiesFromNamespaceContaining<GrillBurgerActivity>();
+
+                    //                    x.AddSagaStateMachinesFromNamespaceContaining(typeof(OrderStateMachine));
 
                     x.AddSagaStateMachine(typeof(OrderStateMachine), typeof(OrderSagaDefinition));
                     x.AddSagaStateMachine(typeof(BurgerStateMachine), typeof(BurgerSagaDefinition));
+                    x.AddSagaStateMachine(typeof(OnionRingsStateMachine), typeof(OnionRingsSagaDefinition));
                     x.AddSagaStateMachine(typeof(RequestStateMachine), typeof(RequestSagaDefinition));
 
                     x.UsingRabbitMq((context, cfg) =>
@@ -93,6 +112,7 @@ namespace ForkJoint.Api
                     });
 
                     x.AddRequestClient<SubmitOrder>();
+                    x.AddRequestClient<OrderOnionRings>();
                 })
                 .AddMassTransitHostedService();
 

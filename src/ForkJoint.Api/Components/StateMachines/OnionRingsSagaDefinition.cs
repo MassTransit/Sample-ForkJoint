@@ -5,36 +5,35 @@ namespace ForkJoint.Api.Components.StateMachines
     using GreenPipes;
     using GreenPipes.Partitioning;
     using MassTransit;
-    using MassTransit.Courier.Contracts;
     using MassTransit.Definition;
     using MassTransit.RabbitMqTransport;
 
 
-    public class BurgerSagaDefinition :
-        SagaDefinition<BurgerState>
+    public class OnionRingsSagaDefinition :
+        SagaDefinition<OnionRingsState>
     {
-        public BurgerSagaDefinition()
+        public OnionRingsSagaDefinition()
         {
             var partitionCount = 32;
 
             ConcurrentMessageLimit = partitionCount;
         }
 
-        protected override void ConfigureSaga(IReceiveEndpointConfigurator endpointConfigurator, ISagaConfigurator<BurgerState> sagaConfigurator)
+        protected override void ConfigureSaga(IReceiveEndpointConfigurator endpointConfigurator, ISagaConfigurator<OnionRingsState> sagaConfigurator)
         {
             if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator rabbit)
             {
                 endpointConfigurator.ConfigureConsumeTopology = false;
-                rabbit.Bind<OrderBurger>();
+                rabbit.Bind<OrderOnionRings>();
             }
 
             var partitionCount = ConcurrentMessageLimit ?? Environment.ProcessorCount * 4;
 
             IPartitioner partitioner = new Partitioner(partitionCount, new Murmur3UnsafeHashGenerator());
 
-            endpointConfigurator.UsePartitioner<OrderBurger>(partitioner, x => x.Message.Burger.BurgerId);
-            endpointConfigurator.UsePartitioner<RoutingSlipCompleted>(partitioner, x => x.Message.TrackingNumber);
-            endpointConfigurator.UsePartitioner<RoutingSlipFaulted>(partitioner, x => x.Message.TrackingNumber);
+            endpointConfigurator.UsePartitioner<OrderOnionRings>(partitioner, x => x.Message.OrderLineId);
+            endpointConfigurator.UsePartitioner<OnionRingsFried>(partitioner, x => x.Message.OrderLineId);
+            endpointConfigurator.UsePartitioner<Fault<FryOnionRings>>(partitioner, x => x.Message.Message.OrderLineId);
 
             endpointConfigurator.UseScheduledRedelivery(r => r.Intervals(1000));
             endpointConfigurator.UseMessageRetry(r => r.Intervals(100));
