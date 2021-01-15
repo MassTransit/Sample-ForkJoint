@@ -6,25 +6,25 @@ namespace ForkJoint.Api.Components.Consumers
     using Services;
 
 
-    public class FryOnionRingsConsumer :
-        IConsumer<FryOnionRings>
+    public class CookFryConsumer :
+        IConsumer<CookFry>
     {
         readonly IFryer _fryer;
 
-        public FryOnionRingsConsumer(IFryer fryer)
+        public CookFryConsumer(IFryer fryer)
         {
             _fryer = fryer;
         }
 
-        public async Task Consume(ConsumeContext<FryOnionRings> context)
+        public async Task Consume(ConsumeContext<CookFry> context)
         {
-            await _fryer.FryOnionRings(context.Message.Quantity);
+            await _fryer.CookFry(context.Message.Size);
 
-            await context.RespondAsync<OnionRingsFried>(new
+            await context.RespondAsync<FryReady>(new
             {
                 context.Message.OrderId,
                 context.Message.OrderLineId,
-                context.Message.Quantity
+                context.Message.Size
             });
         }
     }

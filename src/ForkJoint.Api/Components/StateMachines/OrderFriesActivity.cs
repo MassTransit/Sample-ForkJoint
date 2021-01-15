@@ -9,12 +9,12 @@ namespace ForkJoint.Api.Components.StateMachines
     using MassTransit;
 
 
-    public class RequestBurgerActivity :
+    public class OrderFriesActivity :
         Activity<OrderState, SubmitOrder>
     {
         public void Probe(ProbeContext context)
         {
-            context.CreateScope("requestBurger");
+            context.CreateScope(nameof(OrderFriesActivity));
         }
 
         public void Accept(StateMachineVisitor visitor)
@@ -26,25 +26,15 @@ namespace ForkJoint.Api.Components.StateMachines
         {
             ConsumeEventContext<OrderState, SubmitOrder> consumeContext = context.CreateConsumeContext();
 
-            await Task.WhenAll(context.Data.Burgers.Select(burger => consumeContext.Publish<OrderBurger>(new
-            {
-                context.Data.OrderId,
-                Burger = burger,
-                __RequestId = InVar.Id,
-                __ResponseAddress = consumeContext.ReceiveContext.InputAddress
-            }, context.CancellationToken)));
-
-            // THIS IS SLOW
-            // foreach (var burger in context.Data.Burgers)
-            // {
-            //     await consumeContext.Publish<OrderBurger>(new
-            //     {
-            //         context.Data.OrderId,
-            //         Burger = burger,
-            //         __RequestId = InVar.Id,
-            //         __ResponseAddress = consumeContext.ReceiveContext.InputAddress
-            //     });
-            // }
+            if (context.Data.Fries != null)
+                await Task.WhenAll(context.Data.Fries.Select(fry => consumeContext.Publish<OrderFry>(new
+                {
+                    context.Data.OrderId,
+                    OrderLineId = fry.FryId,
+                    fry.Size,
+                    __RequestId = InVar.Id,
+                    __ResponseAddress = consumeContext.ReceiveContext.InputAddress
+                }, context.CancellationToken)));
 
             await next.Execute(context);
         }

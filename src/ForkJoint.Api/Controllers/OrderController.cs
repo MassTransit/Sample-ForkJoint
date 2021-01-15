@@ -41,7 +41,10 @@
                 Response response = await _client.GetResponse<OrderCompleted, OrderFaulted>(new
                 {
                     order.OrderId,
-                    order.Burgers
+                    order.Burgers,
+                    order.Fries,
+                    order.Shakes,
+                    order.FryShakes
                 });
 
                 return response switch

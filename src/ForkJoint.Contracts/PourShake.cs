@@ -3,10 +3,12 @@ namespace ForkJoint.Contracts
     using System;
 
 
-    public interface OnionRingsFried
+    public interface PourShake
     {
         Guid OrderId { get; }
         Guid OrderLineId { get; }
-        int Quantity { get; }
+
+        string Flavor { get; }
+        Size Size { get; }
     }
 }

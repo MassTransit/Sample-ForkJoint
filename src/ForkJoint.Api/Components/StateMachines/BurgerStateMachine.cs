@@ -17,14 +17,14 @@ namespace ForkJoint.Api.Components.StateMachines
     {
         public BurgerStateMachine()
         {
-            Event(() => BurgerRequested, x => x.CorrelateById(context => context.Message.Burger.BurgerId));
+            Event(() => BurgerOrdered, x => x.CorrelateById(context => context.Message.Burger.BurgerId));
             Event(() => BurgerCompleted, x => x.CorrelateById(instance => instance.TrackingNumber, context => context.Message.TrackingNumber));
             Event(() => BurgerFaulted, x => x.CorrelateById(instance => instance.TrackingNumber, context => context.Message.TrackingNumber));
 
             InstanceState(x => x.CurrentState, WaitingForCompletion, Completed, Faulted);
 
             Initially(
-                When(BurgerRequested)
+                When(BurgerOrdered)
                     .InitializeFuture()
                     .Then(context =>
                     {
@@ -36,17 +36,17 @@ namespace ForkJoint.Api.Components.StateMachines
             );
 
             During(WaitingForCompletion,
-                When(BurgerRequested)
+                When(BurgerOrdered)
                     .PendingRequestStarted()
             );
 
             During(Completed,
-                When(BurgerRequested)
+                When(BurgerOrdered)
                     .RespondAsync(x => x.CreateBurgerCompleted())
             );
 
             During(Faulted,
-                When(BurgerRequested)
+                When(BurgerOrdered)
                     .RespondAsync(x => x.CreateBurgerFaulted())
             );
 
@@ -66,7 +66,7 @@ namespace ForkJoint.Api.Components.StateMachines
         public State Completed { get; }
         public State Faulted { get; }
 
-        public Event<OrderBurger> BurgerRequested { get; }
+        public Event<OrderBurger> BurgerOrdered { get; }
         public Event<RoutingSlipCompleted> BurgerCompleted { get; }
         public Event<RoutingSlipFaulted> BurgerFaulted { get; }
     }

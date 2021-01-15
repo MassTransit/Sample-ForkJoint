@@ -63,6 +63,29 @@ namespace ForkJoint.Api.Components.StateMachines
         /// <typeparam name="T">The event message type</typeparam>
         /// <typeparam name="TResponse">The response message type</typeparam>
         /// <returns></returns>
+        public static EventActivityBinder<TState> SetCompleted<TState, TResponse>(this EventActivityBinder<TState> binder,
+            AsyncEventMessageFactory<TState, TResponse> asyncMessageFactory)
+            where TState : FutureState
+            where TResponse : class
+        {
+            return binder
+                .Then(context => context.Instance.Completed = context.CreateConsumeContext().SentTime ?? DateTime.UtcNow)
+                .If(context => context.Instance.RequestId.HasValue && context.Instance.ResponseAddress != null,
+                    respond => respond.SendAsync(context => context.Instance.ResponseAddress, asyncMessageFactory, (consumeContext, sendContext) =>
+                    {
+                        sendContext.RequestId = consumeContext.Instance.RequestId;
+                    }));
+        }
+
+        /// <summary>
+        /// Complete the request and respond to the request originator along with any other pending requests for the same future result.
+        /// </summary>
+        /// <param name="binder"></param>
+        /// <param name="asyncMessageFactory">The response message factory</param>
+        /// <typeparam name="TState">The FutureState type</typeparam>
+        /// <typeparam name="T">The event message type</typeparam>
+        /// <typeparam name="TResponse">The response message type</typeparam>
+        /// <returns></returns>
         public static EventActivityBinder<TState, T> SetFaulted<TState, T, TResponse>(this EventActivityBinder<TState, T> binder,
             AsyncEventMessageFactory<TState, T, TResponse> asyncMessageFactory)
             where TState : FutureState

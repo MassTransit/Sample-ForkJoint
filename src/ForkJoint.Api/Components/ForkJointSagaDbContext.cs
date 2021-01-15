@@ -21,6 +21,9 @@ namespace ForkJoint.Api.Components
                 yield return new OrderStateMap();
                 yield return new BurgerStateMap();
                 yield return new OnionRingsStateMap();
+                yield return new FryStateMap();
+                yield return new ShakeStateMap();
+                yield return new FryShakeStateMap();
                 yield return new RequestStateMap();
             }
         }

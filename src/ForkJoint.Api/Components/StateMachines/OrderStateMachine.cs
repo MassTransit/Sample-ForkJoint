@@ -26,13 +26,36 @@ namespace ForkJoint.Api.Components.StateMachines
                     .InitializeFuture()
                     .Then(context =>
                     {
+                        context.Instance.LineCount = 0;
+
                         if (context.Data.Burgers != null)
                         {
-                            context.Instance.LineCount = context.Data.Burgers.Length;
+                            context.Instance.LineCount += context.Data.Burgers.Length;
                             context.Instance.LinesPending.UnionWith(context.Data.Burgers.Select(x => x.BurgerId));
                         }
+
+                        if (context.Data.Fries != null)
+                        {
+                            context.Instance.LineCount += context.Data.Fries.Length;
+                            context.Instance.LinesPending.UnionWith(context.Data.Fries.Select(x => x.FryId));
+                        }
+
+                        if (context.Data.Shakes != null)
+                        {
+                            context.Instance.LineCount += context.Data.Shakes.Length;
+                            context.Instance.LinesPending.UnionWith(context.Data.Shakes.Select(x => x.ShakeId));
+                        }
+
+                        if (context.Data.FryShakes != null)
+                        {
+                            context.Instance.LineCount += context.Data.FryShakes.Length;
+                            context.Instance.LinesPending.UnionWith(context.Data.FryShakes.Select(x => x.FryShakeId));
+                        }
                     })
-                    .Activity(x => x.OfType<RequestBurgerActivity>())
+                    .Activity(x => x.OfType<OrderBurgersActivity>())
+                    .Activity(x => x.OfType<OrderFriesActivity>())
+                    .Activity(x => x.OfType<OrderShakesActivity>())
+                    .Activity(x => x.OfType<OrderFryShakesActivity>())
                     .TransitionTo(WaitingForCompletion)
             );
 

@@ -9,31 +9,33 @@ namespace ForkJoint.Api.Components.StateMachines
     using MassTransit.RabbitMqTransport;
 
 
-    public class OnionRingsSagaDefinition :
-        SagaDefinition<OnionRingsState>
+    public class FryShakeSagaDefinition :
+        SagaDefinition<FryShakeState>
     {
-        public OnionRingsSagaDefinition()
+        public FryShakeSagaDefinition()
         {
             var partitionCount = 32;
 
             ConcurrentMessageLimit = partitionCount;
         }
 
-        protected override void ConfigureSaga(IReceiveEndpointConfigurator endpointConfigurator, ISagaConfigurator<OnionRingsState> sagaConfigurator)
+        protected override void ConfigureSaga(IReceiveEndpointConfigurator endpointConfigurator, ISagaConfigurator<FryShakeState> sagaConfigurator)
         {
             if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator rabbit)
             {
                 endpointConfigurator.ConfigureConsumeTopology = false;
-                rabbit.Bind<OrderOnionRings>();
+                rabbit.Bind<OrderFryShake>();
             }
 
             var partitionCount = ConcurrentMessageLimit ?? Environment.ProcessorCount * 4;
 
             IPartitioner partitioner = new Partitioner(partitionCount, new Murmur3UnsafeHashGenerator());
 
-            endpointConfigurator.UsePartitioner<OrderOnionRings>(partitioner, x => x.Message.OrderLineId);
-            endpointConfigurator.UsePartitioner<OnionRingsReady>(partitioner, x => x.Message.OrderLineId);
-            endpointConfigurator.UsePartitioner<Fault<CookOnionRings>>(partitioner, x => x.Message.Message.OrderLineId);
+            endpointConfigurator.UsePartitioner<OrderFryShake>(partitioner, x => x.Message.OrderLineId);
+            endpointConfigurator.UsePartitioner<FryCompleted>(partitioner, x => x.Message.OrderLineId);
+            endpointConfigurator.UsePartitioner<FryFaulted>(partitioner, x => x.Message.OrderLineId);
+            endpointConfigurator.UsePartitioner<ShakeCompleted>(partitioner, x => x.Message.OrderLineId);
+            endpointConfigurator.UsePartitioner<ShakeFaulted>(partitioner, x => x.Message.OrderLineId);
 
             endpointConfigurator.UseScheduledRedelivery(r => r.Intervals(1000));
             endpointConfigurator.UseMessageRetry(r => r.Intervals(100));

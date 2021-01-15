@@ -4,10 +4,8 @@ namespace ForkJoint.Api.Services
     using Contracts;
 
 
-    public interface IFryer
+    public interface IShakeMachine
     {
-        Task CookOnionRings(int quantity);
-
-        Task CookFry(Size size);
+        Task PourShake(string flavor, Size size);
     }
 }

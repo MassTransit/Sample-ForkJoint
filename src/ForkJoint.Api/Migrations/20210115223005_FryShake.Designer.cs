@@ -4,14 +4,16 @@ using ForkJoint.Api.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ForkJoint.Api.Migrations
 {
     [DbContext(typeof(ForkJointSagaDbContext))]
-    partial class ForkJointSagaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210115223005_FryShake")]
+    partial class FryShake
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -91,49 +93,6 @@ namespace ForkJoint.Api.Migrations
                     b.HasKey("CorrelationId");
 
                     b.ToTable("BurgerState");
-                });
-
-            modelBuilder.Entity("ForkJoint.Api.Components.StateMachines.FryShakeState", b =>
-                {
-                    b.Property<Guid>("CorrelationId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("BothState")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("Completed")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("Created")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CurrentState")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ExceptionInfo")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("Faulted")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Flavor")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("OrderId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("RequestId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ResponseAddress")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Size")
-                        .HasColumnType("int");
-
-                    b.HasKey("CorrelationId");
-
-                    b.ToTable("FryShakeState");
                 });
 
             modelBuilder.Entity("ForkJoint.Api.Components.StateMachines.FryState", b =>

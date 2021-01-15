@@ -8,12 +8,12 @@ namespace ForkJoint.Api.Components.StateMachines
     using MassTransit;
 
 
-    public class FryOnionRingsActivity :
-        Activity<OnionRingsState>
+    public class PourShakeActivity :
+        Activity<ShakeState>
     {
         public void Probe(ProbeContext context)
         {
-            context.CreateScope("fryOnionRings");
+            context.CreateScope(nameof(PourShakeActivity));
         }
 
         public void Accept(StateMachineVisitor visitor)
@@ -21,42 +21,43 @@ namespace ForkJoint.Api.Components.StateMachines
             visitor.Visit(this);
         }
 
-        public async Task Execute(BehaviorContext<OnionRingsState> context, Behavior<OnionRingsState> next)
+        public async Task Execute(BehaviorContext<ShakeState> context, Behavior<ShakeState> next)
         {
             await Execute(context);
 
             await next.Execute(context);
         }
 
-        public async Task Execute<T>(BehaviorContext<OnionRingsState, T> context, Behavior<OnionRingsState, T> next)
+        public async Task Execute<T>(BehaviorContext<ShakeState, T> context, Behavior<ShakeState, T> next)
         {
             await Execute(context);
 
             await next.Execute(context);
         }
 
-        public Task Faulted<TException>(BehaviorExceptionContext<OnionRingsState, TException> context, Behavior<OnionRingsState> next)
+        public Task Faulted<TException>(BehaviorExceptionContext<ShakeState, TException> context, Behavior<ShakeState> next)
             where TException : Exception
         {
             return next.Faulted(context);
         }
 
-        public Task Faulted<T, TException>(BehaviorExceptionContext<OnionRingsState, T, TException> context,
-            Behavior<OnionRingsState, T> next)
+        public Task Faulted<T, TException>(BehaviorExceptionContext<ShakeState, T, TException> context,
+            Behavior<ShakeState, T> next)
             where TException : Exception
         {
             return next.Faulted(context);
         }
 
-        static async Task Execute(BehaviorContext<OnionRingsState> context)
+        static async Task Execute(BehaviorContext<ShakeState> context)
         {
-            ConsumeEventContext<OnionRingsState> consumeContext = context.CreateConsumeContext();
+            ConsumeEventContext<ShakeState> consumeContext = context.CreateConsumeContext();
 
-            await consumeContext.Publish<FryOnionRings>(new
+            await consumeContext.Publish<PourShake>(new
             {
                 context.Instance.OrderId,
                 OrderLineId = context.Instance.CorrelationId,
-                context.Instance.Quantity
+                context.Instance.Flavor,
+                context.Instance.Size
             }, x =>
             {
                 x.RequestId = NewId.NextGuid();

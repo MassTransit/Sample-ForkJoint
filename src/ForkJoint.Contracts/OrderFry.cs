@@ -3,11 +3,11 @@ namespace ForkJoint.Contracts
     using System;
 
 
-    public interface FryOnionRings
+    public interface OrderFry
     {
         Guid OrderId { get; }
         Guid OrderLineId { get; }
 
-        int Quantity { get; }
+        Size Size { get; }
     }
 }

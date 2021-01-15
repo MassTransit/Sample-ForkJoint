@@ -15,36 +15,36 @@ namespace ForkJoint.Api.Components.StateMachines
     {
         public OnionRingsStateMachine()
         {
-            Event(() => OnionRingsRequested, x => x.CorrelateById(context => context.Message.OrderLineId));
+            Event(() => OnionRingsOrdered, x => x.CorrelateById(context => context.Message.OrderLineId));
             Event(() => OnionRingsCompleted, x => x.CorrelateById(context => context.Message.OrderLineId));
             Event(() => OnionRingsFaulted, x => x.CorrelateById(context => context.Message.Message.OrderLineId));
 
             InstanceState(x => x.CurrentState, WaitingForCompletion, Completed, Faulted);
 
             Initially(
-                When(OnionRingsRequested)
+                When(OnionRingsOrdered)
                     .InitializeFuture()
                     .Then(context =>
                     {
                         context.Instance.OrderId = context.Data.OrderId;
                         context.Instance.Quantity = context.Data.Quantity;
                     })
-                    .Activity(x => x.OfInstanceType<FryOnionRingsActivity>())
+                    .Activity(x => x.OfInstanceType<CookOnionRingsActivity>())
                     .TransitionTo(WaitingForCompletion)
             );
 
             During(WaitingForCompletion,
-                When(OnionRingsRequested)
+                When(OnionRingsOrdered)
                     .PendingRequestStarted()
             );
 
             During(Completed,
-                When(OnionRingsRequested)
+                When(OnionRingsOrdered)
                     .RespondAsync(x => x.CreateOnionRingsCompleted())
             );
 
             During(Faulted,
-                When(OnionRingsRequested)
+                When(OnionRingsOrdered)
                     .RespondAsync(x => x.CreateOnionRingsFaulted())
             );
 
@@ -63,16 +63,16 @@ namespace ForkJoint.Api.Components.StateMachines
         public State Completed { get; }
         public State Faulted { get; }
 
-        public Event<OrderOnionRings> OnionRingsRequested { get; }
-        public Event<OnionRingsFried> OnionRingsCompleted { get; }
-        public Event<Fault<FryOnionRings>> OnionRingsFaulted { get; }
+        public Event<OrderOnionRings> OnionRingsOrdered { get; }
+        public Event<OnionRingsReady> OnionRingsCompleted { get; }
+        public Event<Fault<CookOnionRings>> OnionRingsFaulted { get; }
     }
 
 
     public static class OnionRingsStateMachineExtensions
     {
-        public static EventActivityBinder<OnionRingsState, Fault<FryOnionRings>> FaultOnionRings(this EventActivityBinder<OnionRingsState,
-            Fault<FryOnionRings>> binder)
+        public static EventActivityBinder<OnionRingsState, Fault<CookOnionRings>> FaultOnionRings(this EventActivityBinder<OnionRingsState,
+            Fault<CookOnionRings>> binder)
         {
             return binder.Then(context => context.Instance.ExceptionInfo = context.Data.Exceptions.FirstOrDefault());
         }

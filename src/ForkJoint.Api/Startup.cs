@@ -50,6 +50,7 @@ namespace ForkJoint.Api
             services.TryAddScoped<IItineraryPlanner<Burger>, BurgerItineraryPlanner>();
             services.TryAddSingleton<IGrill, Grill>();
             services.TryAddSingleton<IFryer, Fryer>();
+            services.TryAddSingleton<IShakeMachine, ShakeMachine>();
 
             services.AddApplicationInsightsTelemetry(options =>
             {
@@ -84,7 +85,7 @@ namespace ForkJoint.Api
                         r.ExistingDbContext<ForkJointSagaDbContext>();
                     });
 
-                    x.AddConsumersFromNamespaceContaining<FryOnionRingsConsumer>();
+                    x.AddConsumersFromNamespaceContaining<CookOnionRingsConsumer>();
 
                     x.AddActivitiesFromNamespaceContaining<GrillBurgerActivity>();
 
@@ -93,6 +94,9 @@ namespace ForkJoint.Api
                     x.AddSagaStateMachine(typeof(OrderStateMachine), typeof(OrderSagaDefinition));
                     x.AddSagaStateMachine(typeof(BurgerStateMachine), typeof(BurgerSagaDefinition));
                     x.AddSagaStateMachine(typeof(OnionRingsStateMachine), typeof(OnionRingsSagaDefinition));
+                    x.AddSagaStateMachine(typeof(FryStateMachine), typeof(FrySagaDefinition));
+                    x.AddSagaStateMachine(typeof(ShakeStateMachine), typeof(ShakeSagaDefinition));
+                    x.AddSagaStateMachine(typeof(FryShakeStateMachine), typeof(FryShakeSagaDefinition));
                     x.AddSagaStateMachine(typeof(RequestStateMachine), typeof(RequestSagaDefinition));
 
                     x.UsingRabbitMq((context, cfg) =>
