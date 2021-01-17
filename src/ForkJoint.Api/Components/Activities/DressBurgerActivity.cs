@@ -36,18 +36,16 @@ namespace ForkJoint.Api.Components.Activities
 
             if (arguments.OnionRing)
             {
-                _logger.LogDebug("Ordering Onion Ring: {OrderId}", arguments.BurgerId);
+                Guid? onionRingId = arguments.OnionRingId ?? NewId.NextGuid();
 
-                Response<OnionRingsCompleted, OnionRingsFaulted> response =
-                    await _onionRingClient.GetResponse<OnionRingsCompleted, OnionRingsFaulted>(new
-                    {
-                        arguments.OrderId,
-                        OrderLineId = arguments.BurgerId,
-                        Quantity = 1
-                    }, context.CancellationToken);
+                _logger.LogDebug("Ordering Onion Ring: {OrderId}", onionRingId);
 
-                if (response.Is(out Response<OnionRingsFaulted> faulted))
-                    throw new InvalidOperationException($"The onion ring was not available: {faulted.Message.ExceptionInfo?.Message}");
+                Response<OnionRingsCompleted> response = await _onionRingClient.GetResponse<OnionRingsCompleted>(new
+                {
+                    arguments.OrderId,
+                    OrderLineId = onionRingId,
+                    Quantity = 1
+                }, context.CancellationToken);
             }
 
             var burger = new Burger

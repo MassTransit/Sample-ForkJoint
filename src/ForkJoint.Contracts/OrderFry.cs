@@ -1,13 +1,8 @@
 namespace ForkJoint.Contracts
 {
-    using System;
-
-
-    public interface OrderFry
+    public interface OrderFry :
+        OrderLine
     {
-        Guid OrderId { get; }
-        Guid OrderLineId { get; }
-
         Size Size { get; }
     }
 }

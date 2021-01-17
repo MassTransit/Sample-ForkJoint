@@ -1,13 +1,8 @@
 namespace ForkJoint.Contracts
 {
-    using System;
-
-
-    public interface OrderShake
+    public interface OrderShake :
+        OrderLine
     {
-        Guid OrderId { get; }
-        Guid OrderLineId { get; }
-
         string Flavor { get; }
         Size Size { get; }
     }

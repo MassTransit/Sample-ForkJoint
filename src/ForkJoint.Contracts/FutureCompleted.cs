@@ -8,11 +8,11 @@ namespace ForkJoint.Contracts
         /// <summary>
         /// When the future was initially created
         /// </summary>
-        DateTime? Created { get; }
+        DateTime Created { get; }
 
         /// <summary>
         /// When the future was finally completed
         /// </summary>
-        DateTime? Completed { get; }
+        DateTime Completed { get; }
     }
 }

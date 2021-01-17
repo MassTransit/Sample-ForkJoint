@@ -74,10 +74,8 @@
                         }),
                         LinesFaulted = faulted.LinesFaulted.ToDictionary(x => x.Key, x => new
                         {
-                            x.Value.Created,
-                            x.Value.Faulted,
-                            x.Value.Description,
-                            Reason = x.Value.ExceptionInfo.Message,
+                            Faulted = x.Value.Timestamp,
+                            Reason = x.Value.GetExceptionMessages(),
                         })
                     }),
                     _ => BadRequest()

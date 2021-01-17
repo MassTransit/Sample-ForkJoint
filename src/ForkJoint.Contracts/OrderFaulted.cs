@@ -2,6 +2,7 @@ namespace ForkJoint.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using MassTransit;
 
 
     public interface OrderFaulted :
@@ -11,6 +12,6 @@ namespace ForkJoint.Contracts
 
         IDictionary<Guid, OrderLineCompleted> LinesCompleted { get; }
 
-        IDictionary<Guid, OrderLineFaulted> LinesFaulted { get; }
+        IDictionary<Guid, Fault<OrderLine>> LinesFaulted { get; }
     }
 }

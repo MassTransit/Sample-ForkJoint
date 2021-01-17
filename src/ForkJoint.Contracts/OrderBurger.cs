@@ -1,12 +1,8 @@
 namespace ForkJoint.Contracts
 {
-    using System;
-
-
-    public interface OrderBurger
+    public interface OrderBurger :
+        OrderLine
     {
-        Guid OrderId { get; }
-
         Burger Burger { get; }
     }
 }

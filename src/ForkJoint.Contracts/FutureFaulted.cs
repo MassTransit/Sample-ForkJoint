@@ -19,6 +19,6 @@ namespace ForkJoint.Contracts
         /// <summary>
         /// The exception related to the fault
         /// </summary>
-        ExceptionInfo ExceptionInfo { get; }
+        ExceptionInfo[] Exceptions { get; }
     }
 }

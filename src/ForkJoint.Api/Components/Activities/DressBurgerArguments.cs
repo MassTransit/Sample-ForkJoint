@@ -18,5 +18,7 @@ namespace ForkJoint.Api.Components.Activities
         bool Mustard { get; }
         bool BarbecueSauce { get; }
         bool OnionRing { get; }
+
+        Guid? OnionRingId { get; }
     }
 }

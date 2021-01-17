@@ -8,9 +8,11 @@ namespace ForkJoint.Api
     using Components;
     using Components.Activities;
     using Components.Consumers;
+    using Components.Futures;
     using Components.ItineraryPlanners;
-    using Components.StateMachines;
     using Contracts;
+    using ForkJoint.Components;
+    using GreenPipes;
     using MassTransit;
     using MassTransit.EntityFrameworkCoreIntegration;
     using Microsoft.ApplicationInsights.DependencyCollector;
@@ -47,7 +49,7 @@ namespace ForkJoint.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.TryAddScoped<IItineraryPlanner<Burger>, BurgerItineraryPlanner>();
+            services.TryAddScoped<IItineraryPlanner<OrderBurger>, BurgerItineraryPlanner>();
             services.TryAddSingleton<IGrill, Grill>();
             services.TryAddSingleton<IFryer, Fryer>();
             services.TryAddSingleton<IShakeMachine, ShakeMachine>();
@@ -89,15 +91,14 @@ namespace ForkJoint.Api
 
                     x.AddActivitiesFromNamespaceContaining<GrillBurgerActivity>();
 
-                    //                    x.AddSagaStateMachinesFromNamespaceContaining(typeof(OrderStateMachine));
+                    x.AddSagaRepository<FutureState>()
+                        .EntityFrameworkRepository(r =>
+                        {
+                            r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
+                            r.LockStatementProvider = new SqlServerLockStatementProvider();
 
-                    x.AddSagaStateMachine(typeof(OrderStateMachine), typeof(OrderSagaDefinition));
-                    x.AddSagaStateMachine(typeof(BurgerStateMachine), typeof(BurgerSagaDefinition));
-                    x.AddSagaStateMachine(typeof(OnionRingsStateMachine), typeof(OnionRingsSagaDefinition));
-                    x.AddSagaStateMachine(typeof(FryStateMachine), typeof(FrySagaDefinition));
-                    x.AddSagaStateMachine(typeof(ShakeStateMachine), typeof(ShakeSagaDefinition));
-                    x.AddSagaStateMachine(typeof(FryShakeStateMachine), typeof(FryShakeSagaDefinition));
-                    x.AddSagaStateMachine(typeof(RequestStateMachine), typeof(RequestSagaDefinition));
+                            r.ExistingDbContext<ForkJointSagaDbContext>();
+                        });
 
                     x.UsingRabbitMq((context, cfg) =>
                     {
@@ -113,6 +114,13 @@ namespace ForkJoint.Api
                         cfg.UseRabbitMqMessageScheduler();
 
                         cfg.ConfigureEndpoints(context);
+
+                        cfg.FutureEndpoint<BurgerFuture, OrderBurger>(context);
+                        cfg.FutureEndpoint<FryFuture, OrderFry>(context);
+                        cfg.FutureEndpoint<ShakeFuture, OrderShake>(context);
+                        cfg.FutureEndpoint<FryShakeFuture, OrderFryShake>(context);
+                        cfg.FutureEndpoint<OnionRingsFuture, OrderOnionRings>(context);
+                        cfg.FutureEndpoint<OrderFuture, SubmitOrder>(context);
                     });
 
                     x.AddRequestClient<SubmitOrder>();

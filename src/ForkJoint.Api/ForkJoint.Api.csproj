@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ForkJoint.Components\ForkJoint.Components.csproj" />
     <ProjectReference Include="..\ForkJoint.Contracts\ForkJoint.Contracts.csproj" />
   </ItemGroup>
 
