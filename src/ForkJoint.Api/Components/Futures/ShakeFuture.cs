@@ -1,10 +1,7 @@
 namespace ForkJoint.Api.Components.Futures
 {
-    using System.Threading.Tasks;
-    using Automatonymous;
     using Contracts;
     using ForkJoint.Components;
-    using MassTransit;
 
 
     public class ShakeFuture :
@@ -13,22 +10,22 @@ namespace ForkJoint.Api.Components.Futures
         public ShakeFuture()
         {
             Event(() => FutureRequested, x => x.CorrelateById(context => context.Message.OrderLineId));
-        }
+            Event(() => RequestFutureRequested, x => x.CorrelateById(context => context.Message.Request.OrderLineId));
 
-        protected override Task<PourShake> CreateCommand(ConsumeEventContext<FutureState, OrderShake> context)
-        {
-            return context.Init<PourShake>(new
+            // this isn't needed but shown for completeness
+            Command(x => x.Init(context => new
             {
-                context.Data.OrderId,
-                context.Data.OrderLineId,
-                context.Data.Flavor,
-                context.Data.Size
-            });
-        }
+                context.Message.OrderId,
+                context.Message.OrderLineId,
+                context.Message.Flavor,
+                context.Message.Size
+            }));
 
-        protected override Task<ShakeCompleted> CreateCompleted(ConsumeEventContext<FutureState, ShakeReady> context)
-        {
-            return Init<ShakeReady, ShakeCompleted>(context, new {Description = $"{context.Data.Size} {context.Data.Flavor} Shake"});
+            Response(x => x.Init(context => new
+            {
+                // only need the calculated property
+                Description = $"{context.Message.Size} {context.Message.Flavor} Shake"
+            }));
         }
     }
 }

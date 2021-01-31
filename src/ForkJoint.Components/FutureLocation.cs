@@ -1,7 +1,10 @@
 namespace ForkJoint.Components
 {
     using System;
+    using MassTransit;
     using MassTransit.Internals.Extensions;
+    using MassTransit.NewIdFormatters;
+    using MassTransit.NewIdParsers;
     using MassTransit.Registration;
 
 
@@ -15,7 +18,9 @@ namespace ForkJoint.Components
             if (!location.TryGetValueFromQueryString("id", out var value))
                 throw new FormatException($"Location format invalid: {location}");
 
-            Id = new Guid(value);
+            var parsedId = IdParser.Parse(value);
+            Id = parsedId.ToGuid();
+
             Address = new Uri(location.GetLeftPart(UriPartial.Path));
         }
 
@@ -27,7 +32,13 @@ namespace ForkJoint.Components
 
         public static implicit operator Uri(FutureLocation location)
         {
-            return new UriBuilder(location.Address) {Query = $"id={location.Id:N}"}.Uri;
+            var newId = location.Id.ToNewId();
+            var id = newId.ToString(IdFormatter);
+
+            return new UriBuilder(location.Address) {Query = $"id={id}"}.Uri;
         }
+
+        static readonly INewIdFormatter IdFormatter = new ZBase32Formatter();
+        static readonly INewIdParser IdParser = new ZBase32Parser(true);
     }
 }

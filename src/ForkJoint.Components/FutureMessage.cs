@@ -2,26 +2,26 @@ namespace ForkJoint.Components
 {
     using System;
     using System.Collections.Generic;
+    using Internals;
     using MassTransit.Courier;
-    using MassTransit.JobService.Components;
     using MassTransit.Util;
 
 
     public class FutureMessage
     {
-        public FutureMessage(Guid resultTypeId, IDictionary<string, object> result)
+        protected FutureMessage(Guid typeId, IDictionary<string, object> message)
         {
-            ResultTypeId = resultTypeId;
-            Result = result;
+            TypeId = typeId;
+            Message = message;
         }
 
-        public IDictionary<string, object> Result { get; }
-        public Guid ResultTypeId { get; }
+        public IDictionary<string, object> Message { get; }
+        public Guid TypeId { get; }
 
         public T ToObject<T>()
             where T : class
         {
-            return ObjectTypeDeserializer.Deserialize<T>(Result);
+            return ObjectTypeDeserializer.Deserialize<T>(Message);
         }
     }
 
@@ -31,7 +31,7 @@ namespace ForkJoint.Components
         where T : class
     {
         public FutureMessage(T result)
-            : base(JobMetadataCache<T>.JobTypeId, SerializerCache.GetObjectAsDictionary(result))
+            : base(FutureMetadataCache<T>.TypeId, SerializerCache.GetObjectAsDictionary(result))
         {
             // TODO change to capture entire message from ConsumeContext with SupportedMessageTypes
         }

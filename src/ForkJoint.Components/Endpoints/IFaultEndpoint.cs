@@ -1,0 +1,11 @@
+namespace ForkJoint.Components.Endpoints
+{
+    using System.Threading.Tasks;
+
+
+    public interface IFaultEndpoint<in TInput>
+        where TInput : class
+    {
+        Task SendFault(FutureConsumeContext<TInput> context, params FutureSubscription[] subscriptions);
+    }
+}

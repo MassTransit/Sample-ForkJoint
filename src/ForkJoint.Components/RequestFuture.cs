@@ -1,11 +1,13 @@
 namespace ForkJoint.Components
 {
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
     using Automatonymous;
-    using GreenPipes;
+    using Configurators;
+    using Endpoints;
+    using Internals;
     using MassTransit;
-    using MassTransit.Util;
 
 
     // ReSharper disable MemberCanBePrivate.Global
@@ -15,50 +17,44 @@ namespace ForkJoint.Components
     /// depending upon the response.
     /// The initiating event correlation must be declared
     /// </summary>
-    /// <typeparam name="TRequest"></typeparam>
-    /// <typeparam name="TCommand"></typeparam>
-    /// <typeparam name="TResult"></typeparam>
-    /// <typeparam name="TCompleted"></typeparam>
-    public abstract class RequestFuture<TRequest, TCompleted, TCommand, TResult> :
-        Future<TRequest, TCompleted>
+    public abstract class RequestFuture<TRequest, TResponse, TCommand, TResult> :
+        Future<TRequest, TResponse>
         where TRequest : class
+        where TResponse : class
         where TCommand : class
         where TResult : class
-        where TCompleted : class
     {
+        readonly FutureCommand<TRequest, TCommand> _command = new();
+        readonly FutureFault<TRequest, Fault<TRequest>, Fault<TCommand>> _fault = new();
+        readonly FutureResponse<TResult, TResponse> _response = new();
+
         protected RequestFuture()
         {
-            Event(() => CommandCompleted, x =>
-            {
-                x.CorrelateById(context => context.RequestId ?? throw new RequestException("RequestId not present"));
-                x.OnMissingInstance(m => m.Fault());
-            });
-            Event(() => CommandFaulted, x =>
-            {
-                x.CorrelateById(context => context.RequestId ?? throw new RequestException("RequestId not present"));
-                x.OnMissingInstance(m => m.Fault());
-            });
-
             Initially(
                 When(FutureRequested)
-                    .ThenAsync(async context =>
-                    {
-                        ConsumeEventContext<FutureState, TRequest> consumeContext = context.CreateConsumeContext();
-
-                        var pipe = new ResponsePipe<TCommand>(consumeContext.ReceiveContext.InputAddress, context.Instance.CorrelationId);
-
-                        await SendCommand(consumeContext, pipe).ConfigureAwait(false);
-                    })
+                    .ThenAsync(context => SendCommand(context)),
+                When(RequestFutureRequested)
+                    .ThenAsync(context => SendCommand(context))
             );
+
+            Event(() => CommandCompleted, x =>
+            {
+                x.CorrelateById(context => RequestIdOrFault(context));
+                x.OnMissingInstance(m => m.Fault());
+            });
+
+            Event(() => CommandFaulted, x =>
+            {
+                x.CorrelateById(context => RequestIdOrFault(context));
+                x.OnMissingInstance(m => m.Fault());
+            });
 
             DuringAny(
                 When(CommandCompleted)
-                    .SetFutureCompleted(CreateCompleted)
-                    .NotifySubscribers(x => GetCompleted(x))
+                    .ThenAsync(context => SetCompleted(context))
                     .TransitionTo(Completed),
                 When(CommandFaulted)
-                    .SetFutureFaulted(CreateFaulted)
-                    .NotifySubscribers(x => GetFaulted(x))
+                    .ThenAsync(context => SetFaulted(context))
                     .TransitionTo(Faulted)
             );
         }
@@ -66,74 +62,61 @@ namespace ForkJoint.Components
         public Event<TResult> CommandCompleted { get; protected set; }
         public Event<Fault<TCommand>> CommandFaulted { get; protected set; }
 
-        /// <summary>
-        /// Optional, sets the address of the request service. By default, requests are published.
-        /// </summary>
-        protected Uri DestinationAddress { get; set; }
-
-        protected virtual async Task SendCommand(ConsumeEventContext<FutureState, TRequest> context, IPipe<SendContext<TCommand>> pipe)
+        protected void Command(Action<IFutureCommandConfigurator<TRequest, TCommand>> configure)
         {
-            var command = await CreateCommand(context).ConfigureAwait(false);
+            var configurator = new FutureCommandConfigurator<TRequest, TCommand>(_command);
 
-            if (DestinationAddress != null)
-            {
-                var endpoint = await context.GetSendEndpoint(DestinationAddress).ConfigureAwait(false);
-
-                await endpoint.Send(command, pipe).ConfigureAwait(false);
-            }
-            else
-                await context.Publish(command, pipe).ConfigureAwait(false);
+            configure?.Invoke(configurator);
         }
 
-        protected virtual Task<TCompleted> CreateCompleted(ConsumeEventContext<FutureState, TResult> context)
+        protected void Response(Action<IFutureResponseConfigurator<TResult, TResponse>> configure)
         {
-            return Init<TResult, TCompleted>(context);
+            var configurator = new FutureResponseConfigurator<TResult, TResponse>(_response);
+
+            configure?.Invoke(configurator);
         }
 
-        protected virtual Task<Fault<TRequest>> CreateFaulted(ConsumeEventContext<FutureState, Fault<TCommand>> context)
+        protected void Fault(Action<IFutureFaultConfigurator<Fault<TRequest>, Fault<TCommand>>> configure)
         {
-            var message = context.Instance.GetRequest<TRequest>();
+            var configurator = new FutureFaultConfigurator<TRequest, Fault<TRequest>, Fault<TCommand>>(_fault);
 
-            return context.Init<Fault<TRequest>>(new
-            {
-                context.Data.FaultId,
-                context.Data.FaultedMessageId,
-                context.Data.Timestamp,
-                context.Data.Exceptions,
-                context.Data.Host,
-                context.Data.FaultMessageTypes,
-                Message = message
-            });
+            configure?.Invoke(configurator);
         }
 
-        protected abstract Task<TCommand> CreateCommand(ConsumeEventContext<FutureState, TRequest> context);
-
-
-        protected class ResponsePipe<T> :
-            IPipe<SendContext<T>>
-            where T : class
+        Task SendCommand(BehaviorContext<FutureState, TRequest> context)
         {
-            readonly Guid _requestId;
-            readonly Uri _responseAddress;
+            FutureConsumeContext<TRequest> consumeContext = context.CreateFutureConsumeContext();
 
-            public ResponsePipe(Uri responseAddress, Guid requestId)
-            {
-                _responseAddress = responseAddress;
-                _requestId = requestId;
-            }
-
-            public Task Send(SendContext<T> context)
-            {
-                context.RequestId = _requestId;
-                context.ResponseAddress = _responseAddress;
-
-                return TaskUtil.Completed;
-            }
-
-            public void Probe(ProbeContext context)
-            {
-                context.CreateFilterScope(nameof(ResponsePipe<T>));
-            }
+            return _command.SendCommand(consumeContext);
         }
+
+        Task SendCommand(BehaviorContext<FutureState, Contracts.Request<TRequest>> context)
+        {
+            FutureConsumeContext<TRequest> consumeContext = context.CreateFutureConsumeContext(context.Data.Request);
+
+            return _command.SendCommand(consumeContext);
+        }
+
+        Task SetCompleted(BehaviorContext<FutureState, TResult> context)
+        {
+            FutureConsumeContext<TResult> consumeContext = context.CreateFutureConsumeContext();
+
+            return _response.SendResponse(consumeContext, consumeContext.Instance.Subscriptions.ToArray());
+        }
+
+        Task SetFaulted(BehaviorContext<FutureState, Fault<TCommand>> context)
+        {
+            FutureConsumeContext<Fault<TCommand>> consumeContext = context.CreateFutureConsumeContext();
+
+            return _fault.SendFault(consumeContext, consumeContext.Instance.Subscriptions.ToArray());
+        }
+    }
+
+
+    public abstract class RequestFuture<TRequest, TCompleted> :
+        RequestFuture<TRequest, TCompleted, TRequest, TCompleted>
+        where TRequest : class
+        where TCompleted : class
+    {
     }
 }

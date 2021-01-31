@@ -4,6 +4,7 @@ namespace ForkJoint.Api.Components.Futures
     using Automatonymous;
     using Contracts;
     using ForkJoint.Components;
+    using ForkJoint.Components.Internals;
     using MassTransit;
 
 
@@ -34,19 +35,19 @@ namespace ForkJoint.Api.Components.Futures
                     .IfElse(context => context.Instance.Completed.HasValue,
                         completed => completed
                             .SetFutureCompleted(x => CreateCompleted(x))
-                            .NotifySubscribers(x => GetCompleted(x))
+                            .RespondToSubscribers(x => GetCompleted(x))
                             .TransitionTo(Completed),
                         notCompleted => notCompleted.If(context => context.Instance.Faulted.HasValue,
                             faulted => faulted
                                 .SetFutureFaulted(x => CreateFaulted(x))
-                                .NotifySubscribers(x => GetFaulted(x))
+                                .RespondToSubscribers(x => GetFaulted(x))
                                 .TransitionTo(Faulted))),
                 When(LineFaulted)
                     .SetFault(context => context.Data.Message.OrderLineId, x => Task.FromResult(x.Data))
                     .If(context => context.Instance.Faulted.HasValue,
                         faulted => faulted
                             .SetFutureFaulted(x => CreateFaulted(x))
-                            .NotifySubscribers(x => GetFaulted(x))
+                            .RespondToSubscribers(x => GetFaulted(x))
                             .TransitionTo(Faulted))
             );
         }

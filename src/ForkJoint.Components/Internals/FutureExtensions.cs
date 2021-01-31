@@ -1,4 +1,4 @@
-namespace ForkJoint.Components
+namespace ForkJoint.Components.Internals
 {
     using System;
     using System.Collections.Generic;
@@ -44,7 +44,7 @@ namespace ForkJoint.Components
             return binder.Then(context =>
             {
                 ConsumeEventContext<FutureState, T> consumeContext = context.CreateConsumeContext();
-                context.Instance.AddSubscription(consumeContext.ResponseAddress, consumeContext.RequestId);
+                context.Instance.AddSubscription(consumeContext);
             });
         }
 
@@ -101,7 +101,7 @@ namespace ForkJoint.Components
             return binder.ThenAsync(context => context.Instance.SetFault(context.CreateConsumeContext(), context.Instance.CorrelationId, messageFactory));
         }
 
-        public static EventActivityBinder<FutureState, T> NotifySubscribers<T, TResponse>(this EventActivityBinder<FutureState, T> binder,
+        public static EventActivityBinder<FutureState, T> RespondToSubscribers<T, TResponse>(this EventActivityBinder<FutureState, T> binder,
             AsyncEventMessageFactory<FutureState, TResponse> asyncMessageFactory)
             where T : class
             where TResponse : class
@@ -115,15 +115,19 @@ namespace ForkJoint.Components
 
             return binder.ThenAsync(async context =>
             {
-                var consumeContext = new AutomatonymousConsumeEventContext<FutureState>(context, context.GetPayload<ConsumeContext>());
-
-                var response = await asyncMessageFactory(consumeContext).ConfigureAwait(false);
-
-                HashSet<FutureSubscription> subscriptions = context.Instance.Subscriptions;
-                if (subscriptions != null)
+                if (context.Instance.HasSubscriptions())
                 {
-                    await Task.WhenAll(subscriptions.Select(subscription => SendResponse(consumeContext, response, subscription.Address,
-                        subscription.RequestId))).ConfigureAwait(false);
+                    HashSet<FutureSubscription> subscriptions = context.Instance.Subscriptions;
+
+                    var consumeContext = new AutomatonymousConsumeEventContext<FutureState>(context, context.GetPayload<ConsumeContext>());
+
+                    var response = await asyncMessageFactory(consumeContext).ConfigureAwait(false);
+
+                    if (subscriptions != null)
+                    {
+                        await Task.WhenAll(subscriptions.Select(subscription => SendResponse(consumeContext, response, subscription.Address,
+                            subscription.RequestId))).ConfigureAwait(false);
+                    }
                 }
             });
         }

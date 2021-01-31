@@ -2,7 +2,6 @@ namespace ForkJoint.Components
 {
     using System;
     using System.Collections.Generic;
-    using System.Threading.Tasks;
     using Automatonymous;
     using MassTransit.Saga;
 
@@ -11,7 +10,15 @@ namespace ForkJoint.Components
         SagaStateMachineInstance,
         ISagaVersion
     {
+        Dictionary<Guid, FutureMessage> _faults;
+        HashSet<Guid> _pending;
+        Dictionary<Guid, FutureMessage> _results;
+        Dictionary<string, object> _variables;
+        HashSet<FutureSubscription> _subscriptions;
+
         public int CurrentState { get; set; }
+
+        public int RetryAttempt { get; set; }
 
         public DateTime Created { get; set; }
         public DateTime? Deadline { get; set; }
@@ -19,103 +26,112 @@ namespace ForkJoint.Components
         public DateTime? Canceled { get; set; }
         public DateTime? Faulted { get; set; }
 
-        /// <summary>
-        /// A URI containing the future's address and identity.
-        /// For example, queue:burger-state?id=B2D7B506-B453-48DE-A85F-BD958FB84C4F
-        /// </summary>
         public Uri Location { get; set; }
 
         public FutureMessage Request { get; set; }
-        public HashSet<Guid> Pending { get; set; } = new();
-        public Dictionary<Guid, FutureMessage> Results { get; set; } = new();
-        public Dictionary<Guid, FutureMessage> Faults { get; set; } = new();
 
-        public HashSet<FutureSubscription> Subscriptions { get; set; }
+        public HashSet<Guid> Pending
+        {
+            get
+            {
+                if (_pending != null)
+                    return _pending;
+
+                lock (this)
+                    _pending ??= new HashSet<Guid>();
+
+                return _pending;
+            }
+            private set => _pending = value;
+        }
+
+        public HashSet<FutureSubscription> Subscriptions
+        {
+            get
+            {
+                if (_subscriptions != null)
+                    return _subscriptions;
+
+                lock (this)
+                    _subscriptions ??= new HashSet<FutureSubscription>(FutureSubscription.Comparer);
+
+                return _subscriptions;
+            }
+            private set => _subscriptions = value;
+        }
+
+        public Dictionary<string, object> Variables
+        {
+            get
+            {
+                if (_variables != null)
+                    return _variables;
+
+                lock (this)
+                    _variables ??= new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+                return _variables;
+            }
+            private set => _variables = value != null ? new Dictionary<string, object>(value, StringComparer.OrdinalIgnoreCase) : null;
+        }
+
+        public Dictionary<Guid, FutureMessage> Results
+        {
+            get
+            {
+                if (_results != null)
+                    return _results;
+
+                lock (this)
+                    _results ??= new Dictionary<Guid, FutureMessage>();
+
+                return _results;
+            }
+            private set => _results = value;
+        }
+
+        public Dictionary<Guid, FutureMessage> Faults
+        {
+            get
+            {
+                if (_faults != null)
+                    return _faults;
+
+                lock (this)
+                    _faults ??= new Dictionary<Guid, FutureMessage>();
+
+                return _faults;
+            }
+            private set => _faults = value;
+        }
 
         public int Version { get; set; }
+
         public Guid CorrelationId { get; set; }
 
-        public void AddSubscription(Uri address, Guid? requestId = default)
+        public bool HasSubscriptions()
         {
-            if (address == null)
-                return;
-
-            Subscriptions ??= new HashSet<FutureSubscription>(FutureSubscription.Comparer);
-            Subscriptions.Add(new FutureSubscription(address, requestId));
+            return _subscriptions != null && _subscriptions.Count > 0;
         }
 
-        public T GetRequest<T>()
-            where T : class
+        public bool HasVariables()
         {
-            return Request?.ToObject<T>();
+            return _variables != null && _variables.Count > 0;
         }
 
-        public bool TryGetResult<T>(Guid id, out T result)
-            where T : class
+        public bool HasResults()
         {
-            if (Results != null && Results.TryGetValue(id, out var message))
-            {
-                result = message.ToObject<T>();
-                return result != default;
-            }
-
-            result = default;
-            return false;
+            return _results != null && _results.Count > 0;
         }
 
-        public bool TryGetFault<T>(Guid id, out T fault)
-            where T : class
+        public bool HasFaults()
         {
-            if (Faults != null && Faults.TryGetValue(id, out var message))
-            {
-                fault = message.ToObject<T>();
-                return fault != default;
-            }
-
-            fault = default;
-            return false;
+            return _faults != null && _faults.Count > 0;
         }
 
-        public async Task<TResult> SetResult<T, TResult>(ConsumeEventContext<FutureState, T> context, Guid id,
-            AsyncEventMessageFactory<FutureState, T, TResult> factory)
-            where T : class
-            where TResult : class
+        public bool HasPending()
         {
-            var timestamp = context.SentTime ?? DateTime.UtcNow;
-
-            if (Pending != null)
-            {
-                Pending.Remove(id);
-
-                if (Pending.Count == 0 && Faults.Count == 0)
-                    Completed = timestamp;
-            }
-            else if (Faults.Count == 0)
-                Completed = timestamp;
-
-            var result = await factory(context).ConfigureAwait(false);
-
-            Results[id] = new FutureMessage<TResult>(result);
-
-            return result;
-        }
-
-        public async Task<TFault> SetFault<T, TFault>(ConsumeEventContext<FutureState, T> context, Guid id,
-            AsyncEventMessageFactory<FutureState, T, TFault> factory)
-            where T : class
-            where TFault : class
-        {
-            var timestamp = context.SentTime ?? DateTime.UtcNow;
-
-            Pending?.Remove(id);
-
-            Faulted ??= timestamp;
-
-            var fault = await factory(context).ConfigureAwait(false);
-
-            Faults[id] = new FutureMessage<TFault>(fault);
-
-            return fault;
+            return _pending != null && _pending.Count > 0;
         }
     }
 }

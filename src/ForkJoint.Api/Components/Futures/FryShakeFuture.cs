@@ -17,6 +17,7 @@ namespace ForkJoint.Api.Components.Futures
         public FryShakeFuture()
         {
             Event(() => FutureRequested, x => x.CorrelateById(context => context.Message.OrderLineId));
+            Event(() => RequestFutureRequested, x => x.CorrelateById(context => context.Message.Request.OrderLineId));
 
             Initially(
                 When(FutureRequested)
