@@ -24,9 +24,13 @@ namespace ForkJoint.Components.Internals
             return new MassTransitFutureConsumeContext<T>(context, context.GetPayload<ConsumeContext>(), context.Data);
         }
 
-        public static async Task SendMessageToSubscriptions<TInput, T>(this FutureConsumeContext<TInput> context,
-            IEnumerable<FutureSubscription> subscriptions, IMessageInitializer<T> initializer, InitializeContext<T> initializeContext, object values)
-            where TInput : class
+        public static FutureConsumeContext CreateFutureConsumeContext(this BehaviorContext<FutureState> context)
+        {
+            return new MassTransitFutureConsumeContext(context, context.GetPayload<ConsumeContext>());
+        }
+
+        public static async Task SendMessageToSubscriptions<T>(this FutureConsumeContext context, IEnumerable<FutureSubscription> subscriptions,
+            IMessageInitializer<T> initializer, InitializeContext<T> initializeContext, object values)
             where T : class
         {
             List<Task> tasks = subscriptions.Select(async sub =>
@@ -46,9 +50,7 @@ namespace ForkJoint.Components.Internals
             await Task.WhenAll(tasks).ConfigureAwait(false);
         }
 
-        public static async Task SendMessageToSubscriptions<TInput, T>(this FutureConsumeContext<TInput> context,
-            IEnumerable<FutureSubscription> subscriptions, T message)
-            where TInput : class
+        public static async Task SendMessageToSubscriptions<T>(this FutureConsumeContext context, IEnumerable<FutureSubscription> subscriptions, T message)
             where T : class
         {
             List<Task> tasks = subscriptions.Select(async sub =>

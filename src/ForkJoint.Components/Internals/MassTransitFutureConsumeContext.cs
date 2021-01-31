@@ -9,17 +9,40 @@ namespace ForkJoint.Components.Internals
 
 
     public class MassTransitFutureConsumeContext<TMessage> :
-        ConsumeContextProxy,
+        MassTransitFutureConsumeContext,
         FutureConsumeContext<TMessage>
         where TMessage : class
     {
+        public MassTransitFutureConsumeContext(BehaviorContext<FutureState> context, ConsumeContext consumeContext, TMessage message)
+            : base(context, consumeContext)
+        {
+            Message = message;
+        }
+
+        public Task NotifyConsumed(TimeSpan duration, string consumerType)
+        {
+            return NotifyConsumed(this, duration, consumerType);
+        }
+
+        public Task NotifyFaulted(TimeSpan duration, string consumerType, Exception exception)
+        {
+            return NotifyFaulted(this, duration, consumerType, exception);
+        }
+
+        public TMessage Message { get; }
+    }
+
+
+    public class MassTransitFutureConsumeContext :
+        ConsumeContextProxy,
+        FutureConsumeContext
+    {
         readonly BehaviorContext<FutureState> _context;
 
-        public MassTransitFutureConsumeContext(BehaviorContext<FutureState> context, ConsumeContext consumeContext, TMessage message)
+        public MassTransitFutureConsumeContext(BehaviorContext<FutureState> context, ConsumeContext consumeContext)
             : base(consumeContext)
         {
             _context = context;
-            Message = message;
         }
 
         public override bool HasPayloadType(Type contextType)
@@ -79,19 +102,7 @@ namespace ForkJoint.Components.Internals
             return _context.Raise(@event, data);
         }
 
-        Event EventContext<FutureState>.Event => _context.Event;
-
-        public Task NotifyConsumed(TimeSpan duration, string consumerType)
-        {
-            return NotifyConsumed(this, duration, consumerType);
-        }
-
-        public Task NotifyFaulted(TimeSpan duration, string consumerType, Exception exception)
-        {
-            return NotifyFaulted(this, duration, consumerType, exception);
-        }
-
-        public TMessage Message { get; }
+        public Event Event => _context.Event;
 
         public Guid FutureId => Instance.CorrelationId;
     }

@@ -29,6 +29,6 @@ namespace ForkJoint.Components
         /// Replaces the command initializer with a custom message factory
         /// </summary>
         /// <param name="factory"></param>
-        void Create(FutureMessageFactory<TRequest, TCommand> factory);
+        void Create(AsyncFutureMessageFactory<TRequest, TCommand> factory);
     }
 }

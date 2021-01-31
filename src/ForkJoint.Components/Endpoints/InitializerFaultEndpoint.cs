@@ -59,4 +59,34 @@ namespace ForkJoint.Components.Endpoints
             await context.SendMessageToSubscriptions(subscriptions, initializer, initializeContext, values).ConfigureAwait(false);
         }
     }
+
+
+    public class InitializerFaultEndpoint<TFault> :
+        IFaultEndpoint
+        where TFault : class
+    {
+        readonly InitializerValueProvider _provider;
+
+        public InitializerFaultEndpoint(InitializerValueProvider provider)
+        {
+            _provider = provider;
+        }
+
+        public async Task SendFault(FutureConsumeContext context, params FutureSubscription[] subscriptions)
+        {
+            context.SetFaulted(context.Instance.CorrelationId);
+
+            var values = _provider(context);
+
+            IMessageInitializer<TFault> initializer = MessageInitializerCache<TFault>.GetInitializer(values.GetType());
+
+            InitializeContext<TFault> initializeContext = initializer.Create(context.CancellationToken);
+
+            InitializeContext<TFault> messageContext = await initializer.Initialize(initializeContext, values).ConfigureAwait(false);
+
+            context.SetFault(context.Instance.CorrelationId, messageContext.Message);
+
+            await context.SendMessageToSubscriptions(subscriptions, initializer, initializeContext, values).ConfigureAwait(false);
+        }
+    }
 }

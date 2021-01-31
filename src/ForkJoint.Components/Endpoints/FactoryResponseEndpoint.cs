@@ -9,18 +9,36 @@ namespace ForkJoint.Components.Endpoints
         where TResult : class
         where TResponse : class
     {
-        readonly FutureMessageFactory<TResult, TResponse> _factory;
+        readonly AsyncFutureMessageFactory<TResult, TResponse> _factory;
 
-        public FactoryResponseEndpoint(FutureMessageFactory<TResult, TResponse> factory)
+        public FactoryResponseEndpoint(AsyncFutureMessageFactory<TResult, TResponse> factory)
         {
             _factory = factory;
         }
 
         public async Task SendResponse(FutureConsumeContext<TResult> context, params FutureSubscription[] subscriptions)
         {
-            var response = await _factory(context).ConfigureAwait(false);
+            var response = await context.SetResult(context.Instance.CorrelationId, _factory);
 
-            context.SetResult(context.Instance.CorrelationId, response);
+            await context.SendMessageToSubscriptions(subscriptions, response).ConfigureAwait(false);
+        }
+    }
+
+
+    public class FactoryResponseEndpoint<TResponse> :
+        IResponseEndpoint
+        where TResponse : class
+    {
+        readonly AsyncFutureMessageFactory<TResponse> _factory;
+
+        public FactoryResponseEndpoint(AsyncFutureMessageFactory<TResponse> factory)
+        {
+            _factory = factory;
+        }
+
+        public async Task SendResponse(FutureConsumeContext context, params FutureSubscription[] subscriptions)
+        {
+            var response = await context.SetResult(context.Instance.CorrelationId, _factory).ConfigureAwait(false);
 
             await context.SendMessageToSubscriptions(subscriptions, response).ConfigureAwait(false);
         }

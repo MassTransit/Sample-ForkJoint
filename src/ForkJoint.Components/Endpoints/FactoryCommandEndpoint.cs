@@ -10,10 +10,10 @@ namespace ForkJoint.Components.Endpoints
         where TRequest : class
         where TCommand : class
     {
-        readonly FutureMessageFactory<TRequest, TCommand> _factory;
+        readonly AsyncFutureMessageFactory<TRequest, TCommand> _factory;
         DestinationAddressProvider<FutureState> _destinationAddressProvider;
 
-        public FactoryCommandEndpoint(DestinationAddressProvider<FutureState> destinationAddressProvider, FutureMessageFactory<TRequest, TCommand> factory)
+        public FactoryCommandEndpoint(DestinationAddressProvider<FutureState> destinationAddressProvider, AsyncFutureMessageFactory<TRequest, TCommand> factory)
         {
             _destinationAddressProvider = destinationAddressProvider;
             _factory = factory;

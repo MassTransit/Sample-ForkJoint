@@ -7,4 +7,11 @@ namespace ForkJoint.Components
     /// <typeparam name="TRequest"></typeparam>
     public delegate object InitializerValueProvider<in TRequest>(FutureConsumeContext<TRequest> context)
         where TRequest : class;
+
+
+    /// <summary>
+    /// Given the event context and request, returns an object used to complete the initialization of the object type
+    /// </summary>
+    /// <param name="context"></param>
+    public delegate object InitializerValueProvider(FutureConsumeContext context);
 }

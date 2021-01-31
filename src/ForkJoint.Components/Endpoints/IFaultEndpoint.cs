@@ -8,4 +8,10 @@ namespace ForkJoint.Components.Endpoints
     {
         Task SendFault(FutureConsumeContext<TInput> context, params FutureSubscription[] subscriptions);
     }
+
+
+    public interface IFaultEndpoint
+    {
+        Task SendFault(FutureConsumeContext context, params FutureSubscription[] subscriptions);
+    }
 }

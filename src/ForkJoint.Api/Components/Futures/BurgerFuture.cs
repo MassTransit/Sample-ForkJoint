@@ -1,6 +1,5 @@
 namespace ForkJoint.Api.Components.Futures
 {
-    using System;
     using Contracts;
     using ForkJoint.Components;
     using MassTransit.Courier;
@@ -20,8 +19,6 @@ namespace ForkJoint.Api.Components.Futures
 
                 return new
                 {
-                    OrderId = context.Message.GetVariable<Guid>(nameof(OrderBurger.OrderId)),
-                    OrderLineId = context.Message.GetVariable<Guid>(nameof(OrderBurger.OrderLineId)),
                     Burger = burger,
                     Description = burger.ToString()
                 };

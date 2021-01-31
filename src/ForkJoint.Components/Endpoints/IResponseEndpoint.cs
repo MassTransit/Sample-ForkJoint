@@ -8,4 +8,10 @@ namespace ForkJoint.Components.Endpoints
     {
         Task SendResponse(FutureConsumeContext<TResult> context, params FutureSubscription[] subscriptions);
     }
+
+
+    public interface IResponseEndpoint
+    {
+        Task SendResponse(FutureConsumeContext context, params FutureSubscription[] subscriptions);
+    }
 }

@@ -22,7 +22,7 @@ namespace ForkJoint.Components.Endpoints
             _endpoint = new InitializerCommandEndpoint<TRequest, TCommand>(_destinationAddressProvider, DefaultProvider);
         }
 
-        public FutureMessageFactory<TRequest, TCommand> Factory
+        public AsyncFutureMessageFactory<TRequest, TCommand> Factory
         {
             set => _endpoint = new FactoryCommandEndpoint<TRequest, TCommand>(_destinationAddressProvider, value);
         }

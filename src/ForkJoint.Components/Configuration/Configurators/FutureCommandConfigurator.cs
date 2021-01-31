@@ -40,7 +40,7 @@ namespace ForkJoint.Components.Configurators
             _command.Initializer = provider;
         }
 
-        public void Create(FutureMessageFactory<TRequest, TCommand> factory)
+        public void Create(AsyncFutureMessageFactory<TRequest, TCommand> factory)
         {
             if (factory == null)
                 throw new ArgumentNullException(nameof(factory));

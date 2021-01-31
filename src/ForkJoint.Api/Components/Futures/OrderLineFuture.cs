@@ -1,21 +1,29 @@
 namespace ForkJoint.Api.Components.Futures
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using Automatonymous;
     using Contracts;
     using ForkJoint.Components;
+    using ForkJoint.Components.Configurators;
+    using ForkJoint.Components.Endpoints;
     using ForkJoint.Components.Internals;
     using MassTransit;
 
 
     // ReSharper disable UnassignedGetOnlyAutoProperty
     // ReSharper disable MemberCanBePrivate.Global
-    public abstract class OrderLineFuture<TRequest, TCompleted, TFaulted> :
-        Future<TRequest, TCompleted, TFaulted>
+    public abstract class OrderLineFuture<TRequest, TResponse, TFault> :
+        Future<TRequest, TResponse, TFault>
         where TRequest : class
-        where TCompleted : class
-        where TFaulted : class
+        where TResponse : class
+        where TFault : class
     {
+        readonly FutureFault<TFault> _fault = new();
+        readonly FutureResponse<TRequest, TResponse> _response = new();
+
         protected OrderLineFuture()
         {
             Event(() => LineCompleted, x =>
@@ -31,33 +39,77 @@ namespace ForkJoint.Api.Components.Futures
 
             DuringAny(
                 When(LineCompleted)
-                    .SetResult(x => x.Data.OrderLineId, x => x.Data)
+                    .SetResult(x => x.Message.OrderLineId, x => x.Message)
                     .IfElse(context => context.Instance.Completed.HasValue,
                         completed => completed
-                            .SetFutureCompleted(x => CreateCompleted(x))
-                            .RespondToSubscribers(x => GetCompleted(x))
+                            .ThenAsync(context => SetCompleted(context))
                             .TransitionTo(Completed),
                         notCompleted => notCompleted.If(context => context.Instance.Faulted.HasValue,
                             faulted => faulted
-                                .SetFutureFaulted(x => CreateFaulted(x))
-                                .RespondToSubscribers(x => GetFaulted(x))
+                                .ThenAsync(context => SetFaulted(context))
                                 .TransitionTo(Faulted))),
                 When(LineFaulted)
-                    .SetFault(context => context.Data.Message.OrderLineId, x => Task.FromResult(x.Data))
+                    .SetFault(context => context.Message.Message.OrderLineId, x => x.Message)
                     .If(context => context.Instance.Faulted.HasValue,
                         faulted => faulted
-                            .SetFutureFaulted(x => CreateFaulted(x))
-                            .RespondToSubscribers(x => GetFaulted(x))
+                            .ThenAsync(context => SetFaulted(context))
                             .TransitionTo(Faulted))
             );
+
+            Fault(x => x.Init(context =>
+            {
+                var message = context.Instance.GetRequest<TRequest>();
+
+                // use supported message types to deserialize results...
+
+                List<Fault> faults = context.Instance.Faults.Select(fault => fault.Value.ToObject<Fault>()).ToList();
+
+                Fault faulted = faults.First();
+
+                ExceptionInfo[] exceptions = faults.SelectMany(fault => fault.Exceptions).ToArray();
+
+                return new
+                {
+                    faulted.FaultId,
+                    faulted.FaultedMessageId,
+                    Timestamp = context.Instance.Faulted,
+                    Exceptions = exceptions,
+                    faulted.Host,
+                    faulted.FaultMessageTypes,
+                    Message = message
+                };
+            }));
         }
 
         public Event<OrderLineCompleted> LineCompleted { get; protected set; }
         public Event<Fault<OrderLine>> LineFaulted { get; protected set; }
 
-        protected abstract Task<TCompleted> CreateCompleted(ConsumeEventContext<FutureState, OrderLineCompleted> context);
+        protected void Response(Action<IFutureResponseConfigurator<TResponse>> configure)
+        {
+            var configurator = new FutureResponseConfigurator<TRequest, TResponse>(_response);
 
-        protected abstract Task<TFaulted> CreateFaulted<T>(ConsumeEventContext<FutureState, T> context)
-            where T : class;
+            configure?.Invoke(configurator);
+        }
+
+        protected void Fault(Action<IFutureFaultConfigurator<TFault>> configure)
+        {
+            var configurator = new FutureFaultConfigurator<TFault>(_fault);
+
+            configure?.Invoke(configurator);
+        }
+
+        Task SetCompleted(BehaviorContext<FutureState> context)
+        {
+            var consumeContext = context.CreateFutureConsumeContext();
+
+            return _response.SendResponse(consumeContext, consumeContext.Instance.Subscriptions.ToArray());
+        }
+
+        Task SetFaulted(BehaviorContext<FutureState> context)
+        {
+            var consumeContext = context.CreateFutureConsumeContext();
+
+            return _fault.SendFault(consumeContext, consumeContext.Instance.Subscriptions.ToArray());
+        }
     }
 }

@@ -26,7 +26,7 @@ namespace ForkJoint.Components
     {
         readonly FutureCommand<TRequest, TCommand> _command = new();
         readonly FutureFault<TRequest, Fault<TRequest>, Fault<TCommand>> _fault = new();
-        readonly FutureResponse<TResult, TResponse> _response = new();
+        readonly FutureResponse<TRequest, TResult, TResponse> _response = new();
 
         protected RequestFuture()
         {
@@ -71,7 +71,7 @@ namespace ForkJoint.Components
 
         protected void Response(Action<IFutureResponseConfigurator<TResult, TResponse>> configure)
         {
-            var configurator = new FutureResponseConfigurator<TResult, TResponse>(_response);
+            var configurator = new FutureResponseConfigurator<TRequest, TResult, TResponse>(_response);
 
             configure?.Invoke(configurator);
         }

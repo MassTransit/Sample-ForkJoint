@@ -29,7 +29,7 @@ namespace ForkJoint.Components
         where TResponse : class
     {
         readonly FutureFault<TRequest, Fault<TRequest>, RoutingSlipFaulted> _fault = new();
-        readonly FutureResponse<RoutingSlipCompleted, TResponse> _response = new();
+        readonly FutureResponse<TRequest, RoutingSlipCompleted, TResponse> _response = new();
 
         protected RoutingSlipFuture()
         {
@@ -83,7 +83,7 @@ namespace ForkJoint.Components
 
         protected void Response(Action<IFutureResponseConfigurator<RoutingSlipCompleted, TResponse>> configure)
         {
-            var configurator = new FutureResponseConfigurator<RoutingSlipCompleted, TResponse>(_response);
+            var configurator = new FutureResponseConfigurator<TRequest, RoutingSlipCompleted, TResponse>(_response);
 
             configure?.Invoke(configurator);
         }

@@ -3,7 +3,6 @@ namespace ForkJoint.Components
     using System;
     using System.Threading.Tasks;
     using Automatonymous;
-    using MassTransit;
 
 
     public static class FutureStateExtensions
@@ -14,40 +13,67 @@ namespace ForkJoint.Components
             return future.Request?.ToObject<T>();
         }
 
-        public static void AddSubscription(this FutureState future, ConsumeContext context)
+        public static void AddSubscription(this FutureConsumeContext context)
         {
             if (context.ResponseAddress == null)
                 return;
 
-            future.Subscriptions.Add(new FutureSubscription(context.ResponseAddress, context.RequestId));
+            context.Instance.Subscriptions.Add(new FutureSubscription(context.ResponseAddress, context.RequestId));
         }
 
-        public static async Task<TResult> SetResult<T, TResult>(this FutureState future,
-            ConsumeEventContext<FutureState, T> context, Guid id, AsyncEventMessageFactory<FutureState, T, TResult> factory)
+        public static async Task<TResult> SetResult<T, TResult>(this FutureConsumeContext<T> context, Guid id, AsyncFutureMessageFactory<T, TResult> factory)
             where T : class
             where TResult : class
         {
-            var timestamp = context.SentTime ?? DateTime.UtcNow;
-
-            if (future.HasPending())
-            {
-                future.Pending.Remove(id);
-
-                if (!future.HasPending() && !future.HasFaults())
-                    future.Completed = timestamp;
-            }
-            else if (!future.HasFaults())
-                future.Completed = timestamp;
+            if (!context.Instance.Completed.HasValue)
+                SetCompleted(context, id);
 
             var result = await factory(context).ConfigureAwait(false);
 
-            future.Results[id] = new FutureMessage<TResult>(result);
+            context.Instance.Results[id] = new FutureMessage<TResult>(result);
 
             return result;
         }
 
-        public static void SetResult<T, TResult>(this FutureConsumeContext<T> context, Guid id, TResult result)
+        public static async Task<TResult> SetResult<TResult>(this FutureConsumeContext context, Guid id, AsyncFutureMessageFactory<TResult> factory)
+            where TResult : class
+        {
+            if (!context.Instance.Completed.HasValue)
+                SetCompleted(context, id);
+
+            var result = await factory(context).ConfigureAwait(false);
+
+            context.Instance.Results[id] = new FutureMessage<TResult>(result);
+
+            return result;
+        }
+
+        public static void SetResult<T, TResult>(this FutureConsumeContext<T> context, Guid id, FutureMessageFactory<T, TResult> factory)
             where T : class
+            where TResult : class
+        {
+            if (!context.Instance.Completed.HasValue)
+                SetCompleted(context, id);
+
+            var result = factory(context);
+
+            context.Instance.Results[id] = new FutureMessage<TResult>(result);
+        }
+
+        public static TResult SetResult<TResult>(this FutureConsumeContext context, Guid id, FutureMessageFactory<TResult> factory)
+            where TResult : class
+        {
+            if (!context.Instance.Completed.HasValue)
+                SetCompleted(context, id);
+
+            var result = factory(context);
+
+            context.Instance.Results[id] = new FutureMessage<TResult>(result);
+
+            return result;
+        }
+
+        public static void SetResult<TResult>(this FutureConsumeContext context, Guid id, TResult result)
             where TResult : class
         {
             if (!context.Instance.Completed.HasValue)
@@ -56,8 +82,7 @@ namespace ForkJoint.Components
             context.Instance.Results[id] = new FutureMessage<TResult>(result);
         }
 
-        public static void SetCompleted<T>(this FutureConsumeContext<T> context, Guid id)
-            where T : class
+        public static void SetCompleted(this FutureConsumeContext context, Guid id)
         {
             var timestamp = context.SentTime ?? DateTime.UtcNow;
 
@@ -86,14 +111,23 @@ namespace ForkJoint.Components
             future.Faulted ??= timestamp;
         }
 
-        public static void SetFault<T, TFault>(this FutureConsumeContext<T> context, Guid id, TFault fault, DateTime? timestamp = default)
+        public static void SetFault<TFault>(this FutureConsumeContext context, Guid id, TFault fault, DateTime? timestamp = default)
+            where TFault : class
+        {
+            SetFaulted(context, id, timestamp);
+
+            context.Instance.Faults[id] = new FutureMessage<TFault>(fault);
+        }
+
+        public static void SetFault<T, TFault>(this FutureConsumeContext<T> context, Guid id, FutureMessageFactory<T, TFault> factory)
             where T : class
             where TFault : class
         {
-            if (!context.Instance.Faulted.HasValue)
-                SetFaulted(context, id, timestamp);
+            SetFaulted(context, id);
 
-            context.Instance.Faults[id] = new FutureMessage<TFault>(fault);
+            var result = factory(context);
+
+            context.Instance.Faults[id] = new FutureMessage<TFault>(result);
         }
 
         public static async Task<TFault> SetFault<T, TFault>(this FutureState future,

@@ -15,8 +15,6 @@ namespace ForkJoint.Api.Components.Futures
             // this isn't needed but shown for completeness
             Command(x => x.Init(context => new
             {
-                context.Message.OrderId,
-                context.Message.OrderLineId,
                 context.Message.Flavor,
                 context.Message.Size
             }));
