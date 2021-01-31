@@ -24,6 +24,8 @@ namespace ForkJoint.Api.Components
 
             entity.Property(x => x.Location);
 
+            entity.Property(x => x.RetryAttempt);
+
             entity.Property(x => x.Request).HasConversion(new JsonValueConverter<FutureMessage>())
                 .Metadata.SetValueComparer(new JsonValueComparer<FutureMessage>());
             entity.Property(x => x.Pending)
@@ -39,6 +41,9 @@ namespace ForkJoint.Api.Components
             entity.Property(x => x.Subscriptions)
                 .HasConversion(new JsonValueConverter<HashSet<FutureSubscription>>())
                 .Metadata.SetValueComparer(new JsonValueComparer<HashSet<FutureSubscription>>());
+            entity.Property(x => x.Variables)
+                .HasConversion(new JsonValueConverter<Dictionary<string, object>>())
+                .Metadata.SetValueComparer(new JsonValueComparer<Dictionary<string, object>>());
         }
     }
 }

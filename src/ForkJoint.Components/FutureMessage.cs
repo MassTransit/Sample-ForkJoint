@@ -9,14 +9,14 @@ namespace ForkJoint.Components
 
     public class FutureMessage
     {
-        protected FutureMessage(Guid typeId, IDictionary<string, object> message)
+        public FutureMessage(Guid typeId, IDictionary<string, object> message)
         {
             TypeId = typeId;
             Message = message;
         }
 
-        public IDictionary<string, object> Message { get; }
-        public Guid TypeId { get; }
+        public IDictionary<string, object> Message { get; private set; }
+        public Guid TypeId { get; private set; }
 
         public T ToObject<T>()
             where T : class

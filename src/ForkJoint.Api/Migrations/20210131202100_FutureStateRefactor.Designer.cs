@@ -10,14 +10,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ForkJoint.Api.Migrations
 {
     [DbContext(typeof(ForkJointSagaDbContext))]
-    [Migration("20210117003452_FutureState")]
-    partial class FutureState
+    [Migration("20210131202100_FutureStateRefactor")]
+    partial class FutureStateRefactor
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.10")
+                .HasAnnotation("ProductVersion", "3.1.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -59,7 +59,13 @@ namespace ForkJoint.Api.Migrations
                     b.Property<string>("Results")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("RetryAttempt")
+                        .HasColumnType("int");
+
                     b.Property<string>("Subscriptions")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Variables")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Version")

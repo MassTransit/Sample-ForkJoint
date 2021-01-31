@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ForkJoint.Api.Migrations
 {
-    public partial class FutureState : Migration
+    public partial class FutureStateRefactor : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -13,6 +13,7 @@ namespace ForkJoint.Api.Migrations
                 {
                     CorrelationId = table.Column<Guid>(nullable: false),
                     CurrentState = table.Column<int>(nullable: false),
+                    RetryAttempt = table.Column<int>(nullable: false),
                     Created = table.Column<DateTime>(nullable: false),
                     Deadline = table.Column<DateTime>(nullable: true),
                     Completed = table.Column<DateTime>(nullable: true),
@@ -21,9 +22,10 @@ namespace ForkJoint.Api.Migrations
                     Location = table.Column<string>(nullable: true),
                     Request = table.Column<string>(nullable: true),
                     Pending = table.Column<string>(nullable: true),
+                    Subscriptions = table.Column<string>(nullable: true),
+                    Variables = table.Column<string>(nullable: true),
                     Results = table.Column<string>(nullable: true),
                     Faults = table.Column<string>(nullable: true),
-                    Subscriptions = table.Column<string>(nullable: true),
                     Version = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
