@@ -10,7 +10,6 @@ namespace ForkJoint.Api.Components.Futures
         public ShakeFuture()
         {
             Event(() => FutureRequested, x => x.CorrelateById(context => context.Message.OrderLineId));
-            Event(() => RequestFutureRequested, x => x.CorrelateById(context => context.Message.Request.OrderLineId));
 
             // this isn't needed but shown for completeness
             Command(x => x.Init(context => new

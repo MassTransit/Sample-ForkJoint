@@ -11,8 +11,7 @@ namespace ForkJoint.Components.Activities
 
 
     public class ExecuteRoutingSlipFutureActivity<T> :
-        Activity<FutureState, T>,
-        Activity<FutureState, Contracts.Request<T>>
+        Activity<FutureState, T>
         where T : class
     {
         readonly IItineraryPlanner<T> _planner;
@@ -38,17 +37,6 @@ namespace ForkJoint.Components.Activities
         }
 
         public Task Faulted<TException>(BehaviorExceptionContext<FutureState, T, TException> context, Behavior<FutureState, T> next)
-            where TException : Exception
-        {
-            return next.Faulted(context);
-        }
-
-        public Task Execute(BehaviorContext<FutureState, Contracts.Request<T>> context, Behavior<FutureState, Contracts.Request<T>> next)
-        {
-            return Execute(context.CreateFutureConsumeContext(context.Data.Request));
-        }
-
-        public Task Faulted<TException>(BehaviorExceptionContext<FutureState, Contracts.Request<T>, TException> context, Behavior<FutureState, Contracts.Request<T>> next)
             where TException : Exception
         {
             return next.Faulted(context);

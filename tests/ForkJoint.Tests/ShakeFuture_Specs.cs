@@ -5,6 +5,7 @@ namespace ForkJoint.Tests
     using Api.Components.Consumers;
     using Api.Components.Futures;
     using Api.Services;
+    using Components;
     using Contracts;
     using MassTransit;
     using MassTransit.ExtensionsDependencyInjectionIntegration;
@@ -46,6 +47,8 @@ namespace ForkJoint.Tests
         protected override void ConfigureServices(IServiceCollection collection)
         {
             collection.AddSingleton<IShakeMachine, ShakeMachine>();
+
+            collection.AddFuture<ShakeFuture>();
         }
 
         protected override void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator)
@@ -53,11 +56,6 @@ namespace ForkJoint.Tests
             configurator.AddConsumer<PourShakeConsumer>();
 
             configurator.AddRequestClient<OrderShake>();
-        }
-
-        protected override void ConfigureInMemoryBus(IInMemoryBusFactoryConfigurator configurator)
-        {
-            configurator.FutureEndpoint<ShakeFuture, OrderShake>(Provider);
         }
     }
 }

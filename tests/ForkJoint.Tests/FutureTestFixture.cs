@@ -1,7 +1,6 @@
 namespace ForkJoint.Tests
 {
     using System.Threading.Tasks;
-    using Api.Components.Futures;
     using Components;
     using MassTransit;
     using MassTransit.Context;
@@ -28,7 +27,7 @@ namespace ForkJoint.Tests
                     cfg.AddSagaRepository<FutureState>()
                         .InMemoryRepository();
 
-                    cfg.ApplyCustomMassTransitConfiguration();
+                    cfg.SetKebabCaseEndpointNameFormatter();
 
                     ConfigureMassTransit(cfg);
                 });
@@ -42,7 +41,7 @@ namespace ForkJoint.Tests
             TestHarness = Provider.GetRequiredService<InMemoryTestHarness>();
             TestHarness.OnConfigureInMemoryBus += configurator =>
             {
-                configurator.ApplyCustomBusConfiguration();
+                configurator.ConfigureFutureEndpoints(Provider);
 
                 ConfigureInMemoryBus(configurator);
             };

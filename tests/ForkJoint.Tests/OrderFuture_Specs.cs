@@ -187,6 +187,13 @@ namespace ForkJoint.Tests
             collection.AddSingleton<IGrill, Grill>();
             collection.AddScoped<IItineraryPlanner<OrderBurger>, BurgerItineraryPlanner>();
             collection.AddSingleton<IFryer, Fryer>();
+
+            collection.AddFuture<BurgerFuture>();
+            collection.AddFuture<OnionRingsFuture>();
+            collection.AddFuture<FryFuture>();
+            collection.AddFuture<ShakeFuture>();
+            collection.AddFuture<FryShakeFuture>();
+            collection.AddFuture<OrderFuture>();
         }
 
         protected override void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator)
@@ -197,16 +204,6 @@ namespace ForkJoint.Tests
 
             configurator.AddRequestClient<SubmitOrder>();
             configurator.AddRequestClient<OrderOnionRings>();
-        }
-
-        protected override void ConfigureInMemoryBus(IInMemoryBusFactoryConfigurator configurator)
-        {
-            configurator.FutureEndpoint<BurgerFuture, OrderBurger>(Provider);
-            configurator.FutureEndpoint<FryFuture, OrderFry>(Provider);
-            configurator.FutureEndpoint<ShakeFuture, OrderShake>(Provider);
-            configurator.FutureEndpoint<FryShakeFuture, OrderFryShake>(Provider);
-            configurator.FutureEndpoint<OnionRingsFuture, OrderOnionRings>(Provider);
-            configurator.FutureEndpoint<OrderFuture, SubmitOrder>(Provider);
         }
     }
 }

@@ -29,12 +29,14 @@ namespace ForkJoint.Api.Components.Futures
             Event(() => LineCompleted, x =>
             {
                 x.CorrelateById(context => context.Message.OrderId);
-                x.OnMissingInstance(m => m.Fault());
+                x.OnMissingInstance(m => m.Execute(context => throw new FutureNotFoundException(typeof(TRequest), context.Message.OrderId)));
+                x.ConfigureConsumeTopology = false;
             });
             Event(() => LineFaulted, x =>
             {
                 x.CorrelateById(context => context.Message.Message.OrderId);
-                x.OnMissingInstance(m => m.Fault());
+                x.OnMissingInstance(m => m.Execute(context => throw new FutureNotFoundException(typeof(TRequest), context.Message.Message.OrderId)));
+                x.ConfigureConsumeTopology = false;
             });
 
             DuringAny(

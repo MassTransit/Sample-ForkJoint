@@ -23,15 +23,15 @@ namespace ForkJoint.Components
             InstanceState(x => x.CurrentState, WaitingForCompletion, Completed, Faulted);
 
             Event(() => FutureRequested, x => x.CorrelateById(context => CorrelationIdOrFault(context)));
-            Event(() => RequestFutureRequested, x => x.CorrelateById(context => CorrelationIdOrFault(context)));
 
             Event(() => ResponseRequested, e =>
             {
                 e.CorrelateById(x => x.Message.CorrelationId);
 
                 e.OnMissingInstance(x => x.Execute(context => throw new FutureNotFoundException(typeof(TRequest), context.Message.CorrelationId)));
-            });
 
+                e.ConfigureConsumeTopology = false;
+            });
 
             Initially(
                 When(FutureRequested)
@@ -66,7 +66,6 @@ namespace ForkJoint.Components
         public State Faulted { get; protected set; }
 
         public Event<TRequest> FutureRequested { get; protected set; }
-        public Event<Contracts.Request<TRequest>> RequestFutureRequested { get; protected set; }
         public Event<Get<TRequest>> ResponseRequested { get; protected set; }
 
         protected static Guid RequestIdOrFault(MessageContext context)

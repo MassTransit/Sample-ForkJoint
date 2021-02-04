@@ -5,6 +5,7 @@ namespace ForkJoint.Tests
     using Api.Components.Consumers;
     using Api.Components.Futures;
     using Api.Services;
+    using Components;
     using Contracts;
     using MassTransit;
     using MassTransit.ExtensionsDependencyInjectionIntegration;
@@ -47,6 +48,10 @@ namespace ForkJoint.Tests
         {
             collection.AddSingleton<IShakeMachine, ShakeMachine>();
             collection.AddSingleton<IFryer, Fryer>();
+
+            collection.AddFuture<FryFuture>();
+            collection.AddFuture<ShakeFuture>();
+            collection.AddFuture<FryShakeFuture>();
         }
 
         protected override void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator)
@@ -55,13 +60,6 @@ namespace ForkJoint.Tests
             configurator.AddConsumer<CookFryConsumer>();
 
             configurator.AddRequestClient<OrderFryShake>();
-        }
-
-        protected override void ConfigureInMemoryBus(IInMemoryBusFactoryConfigurator configurator)
-        {
-            configurator.FutureEndpoint<FryFuture, OrderFry>(Provider);
-            configurator.FutureEndpoint<ShakeFuture, OrderShake>(Provider);
-            configurator.FutureEndpoint<FryShakeFuture, OrderFryShake>(Provider);
         }
     }
 }

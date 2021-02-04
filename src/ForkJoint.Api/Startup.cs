@@ -73,6 +73,15 @@ namespace ForkJoint.Api
                     m.MigrationsHistoryTable($"__{nameof(ForkJointSagaDbContext)}");
                 }));
 
+            services.AddFuture<BurgerFuture>();
+            services.AddFuture<OnionRingsFuture>();
+            services.AddFuture<FryFuture>();
+            services.AddFuture<ShakeFuture>();
+            services.AddFuture<FryShakeFuture>();
+            services.AddFuture<OrderFuture>();
+
+            services.AddGenericRequestClient();
+
             services.AddMassTransit(x =>
                 {
                     x.ApplyCustomMassTransitConfiguration();
@@ -115,16 +124,8 @@ namespace ForkJoint.Api
 
                         cfg.ConfigureEndpoints(context);
 
-                        cfg.FutureEndpoint<BurgerFuture, OrderBurger>(context);
-                        cfg.FutureEndpoint<FryFuture, OrderFry>(context);
-                        cfg.FutureEndpoint<ShakeFuture, OrderShake>(context);
-                        cfg.FutureEndpoint<FryShakeFuture, OrderFryShake>(context);
-                        cfg.FutureEndpoint<OnionRingsFuture, OrderOnionRings>(context);
-                        cfg.FutureEndpoint<OrderFuture, SubmitOrder>(context);
+                        cfg.ConfigureFutureEndpoints(context);
                     });
-
-                    x.AddRequestClient<SubmitOrder>();
-                    x.AddRequestClient<OrderOnionRings>();
                 })
                 .AddMassTransitHostedService();
 

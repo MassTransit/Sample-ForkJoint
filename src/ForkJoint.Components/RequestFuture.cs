@@ -32,21 +32,21 @@ namespace ForkJoint.Components
         {
             Initially(
                 When(FutureRequested)
-                    .ThenAsync(context => SendCommand(context)),
-                When(RequestFutureRequested)
                     .ThenAsync(context => SendCommand(context))
             );
 
             Event(() => CommandCompleted, x =>
             {
                 x.CorrelateById(context => RequestIdOrFault(context));
-                x.OnMissingInstance(m => m.Fault());
+                x.OnMissingInstance(m => m.Execute(context => throw new FutureNotFoundException(typeof(TRequest), context.RequestId ?? default)));
+                x.ConfigureConsumeTopology = false;
             });
 
             Event(() => CommandFaulted, x =>
             {
                 x.CorrelateById(context => RequestIdOrFault(context));
-                x.OnMissingInstance(m => m.Fault());
+                x.OnMissingInstance(m => m.Execute(context => throw new FutureNotFoundException(typeof(TRequest), context.RequestId ?? default)));
+                x.ConfigureConsumeTopology = false;
             });
 
             DuringAny(
@@ -86,13 +86,6 @@ namespace ForkJoint.Components
         Task SendCommand(BehaviorContext<FutureState, TRequest> context)
         {
             FutureConsumeContext<TRequest> consumeContext = context.CreateFutureConsumeContext();
-
-            return _command.SendCommand(consumeContext);
-        }
-
-        Task SendCommand(BehaviorContext<FutureState, Contracts.Request<TRequest>> context)
-        {
-            FutureConsumeContext<TRequest> consumeContext = context.CreateFutureConsumeContext(context.Data.Request);
 
             return _command.SendCommand(consumeContext);
         }

@@ -36,13 +36,18 @@ namespace ForkJoint.Components
             Event(() => RoutingSlipCompleted, x =>
             {
                 x.CorrelateById(context => FutureIdOrFault(context.Message.Variables));
+                x.OnMissingInstance(m =>
+                    m.Execute(context => throw new FutureNotFoundException(typeof(TRequest), FutureIdOrDefault(context.Message.Variables))));
                 x.OnMissingInstance(m => m.Fault());
+                x.ConfigureConsumeTopology = false;
             });
 
             Event(() => RoutingSlipFaulted, x =>
             {
                 x.CorrelateById(context => FutureIdOrFault(context.Message.Variables));
-                x.OnMissingInstance(m => m.Fault());
+                x.OnMissingInstance(m =>
+                    m.Execute(context => throw new FutureNotFoundException(typeof(TRequest), FutureIdOrDefault(context.Message.Variables))));
+                x.ConfigureConsumeTopology = false;
             });
 
             Fault(fault => fault.Init(context =>
@@ -63,8 +68,6 @@ namespace ForkJoint.Components
 
             Initially(
                 When(FutureRequested)
-                    .Activity(x => x.OfType<ExecuteRoutingSlipFutureActivity<TRequest>>()),
-                When(RequestFutureRequested)
                     .Activity(x => x.OfType<ExecuteRoutingSlipFutureActivity<TRequest>>())
             );
 
@@ -119,6 +122,11 @@ namespace ForkJoint.Components
                 return correlationId;
 
             throw new RequestException("CorrelationId not present, define the routing slip using Event");
+        }
+
+        protected static Guid FutureIdOrDefault(IDictionary<string, object> variables)
+        {
+            return variables.TryGetValue(nameof(FutureConsumeContext.FutureId), out Guid correlationId) ? correlationId : default;
         }
     }
 }

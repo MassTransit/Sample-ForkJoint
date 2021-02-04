@@ -10,7 +10,6 @@ namespace ForkJoint.Api.Components.Futures
         public OnionRingsFuture()
         {
             Event(() => FutureRequested, x => x.CorrelateById(context => context.Message.OrderLineId));
-            Event(() => RequestFutureRequested, x => x.CorrelateById(context => context.Message.Request.OrderLineId));
 
             Response(x => x.Init(context => new {Description = $"{context.Message.Quantity} Onion Rings"}));
         }

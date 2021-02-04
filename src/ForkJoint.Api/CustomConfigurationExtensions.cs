@@ -1,44 +1,28 @@
 namespace ForkJoint.Api
 {
-    using Automatonymous;
-    using ForkJoint.Components;
-    using GreenPipes;
     using MassTransit;
-    using MassTransit.RabbitMqTransport;
 
 
     public static class CustomConfigurationExtensions
     {
         /// <summary>
-        /// Configure future endpoints to have redelivery, retry, outbox, etc.
+        /// Should be using on every UsingRabbitMq configuration
         /// </summary>
         /// <param name="configurator"></param>
-        public static void ApplyFutureEndpointConfiguration<T>(this IReceiveEndpointConfigurator configurator)
-            where T : class
+        public static void ApplyCustomBusConfiguration(this IBusFactoryConfigurator configurator)
         {
-            if (configurator is IRabbitMqReceiveEndpointConfigurator rabbit)
-            {
-                rabbit.ConfigureConsumeTopology = false;
-                rabbit.Bind<T>();
-            }
+            var entityNameFormatter = configurator.MessageTopology.EntityNameFormatter;
 
-            configurator.UseScheduledRedelivery(r => r.Intervals(5000));
-            configurator.UseMessageRetry(r => r.Intervals(100, 200, 500));
-            configurator.UseInMemoryOutbox();
+            configurator.MessageTopology.SetEntityNameFormatter(new CustomEntityNameFormatter(entityNameFormatter));
         }
 
-        public static void FutureEndpoint<TFuture, TRequest>(this IBusFactoryConfigurator configurator, IBusRegistrationContext context)
-            where TFuture : class, SagaStateMachine<FutureState>, new()
-            where TRequest : class
+        /// <summary>
+        /// Should be used on every AddMassTransit configuration
+        /// </summary>
+        /// <param name="configurator"></param>
+        public static void ApplyCustomMassTransitConfiguration(this IBusRegistrationConfigurator configurator)
         {
-            var endpointNameFormatter = context.GetRequiredService<IEndpointNameFormatter>();
-
-            configurator.ReceiveEndpoint(endpointNameFormatter.Message<TFuture>(), endpoint =>
-            {
-                endpoint.ApplyFutureEndpointConfiguration<TRequest>();
-
-                endpoint.StateMachineSaga(new TFuture(), context);
-            });
+            configurator.SetEndpointNameFormatter(new CustomEndpointNameFormatter());
         }
     }
 }

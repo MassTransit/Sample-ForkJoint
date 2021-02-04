@@ -1,4 +1,4 @@
-namespace ForkJoint.Contracts.Extensions
+namespace ForkJoint.Api
 {
     using MassTransit;
     using MassTransit.Courier;

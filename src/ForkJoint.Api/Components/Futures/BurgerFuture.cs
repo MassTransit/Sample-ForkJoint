@@ -11,7 +11,6 @@ namespace ForkJoint.Api.Components.Futures
         public BurgerFuture()
         {
             Event(() => FutureRequested, x => x.CorrelateById(context => context.Message.Burger.BurgerId));
-            Event(() => RequestFutureRequested, x => x.CorrelateById(context => context.Message.Request.Burger.BurgerId));
 
             Response(x => x.Init(context =>
             {

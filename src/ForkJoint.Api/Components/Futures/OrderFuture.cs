@@ -15,7 +15,6 @@ namespace ForkJoint.Api.Components.Futures
         public OrderFuture()
         {
             Event(() => FutureRequested, x => x.CorrelateById(context => context.Message.OrderId));
-            Event(() => RequestFutureRequested, x => x.CorrelateById(context => context.Message.Request.OrderId));
 
             Initially(
                 When(FutureRequested)
