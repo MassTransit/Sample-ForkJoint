@@ -9,8 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForkJoint.Contracts", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForkJoint.Tests", "tests\ForkJoint.Tests\ForkJoint.Tests.csproj", "{85451494-70F7-4F2E-85B3-36F7AA0EC7F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForkJoint.Components", "src\ForkJoint.Components\ForkJoint.Components.csproj", "{3131939B-8E5C-425B-A35A-6E023FBB7788}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,17 +58,5 @@ Global
 		{85451494-70F7-4F2E-85B3-36F7AA0EC7F0}.Release|x64.Build.0 = Release|Any CPU
 		{85451494-70F7-4F2E-85B3-36F7AA0EC7F0}.Release|x86.ActiveCfg = Release|Any CPU
 		{85451494-70F7-4F2E-85B3-36F7AA0EC7F0}.Release|x86.Build.0 = Release|Any CPU
-		{3131939B-8E5C-425B-A35A-6E023FBB7788}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3131939B-8E5C-425B-A35A-6E023FBB7788}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3131939B-8E5C-425B-A35A-6E023FBB7788}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{3131939B-8E5C-425B-A35A-6E023FBB7788}.Debug|x64.Build.0 = Debug|Any CPU
-		{3131939B-8E5C-425B-A35A-6E023FBB7788}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{3131939B-8E5C-425B-A35A-6E023FBB7788}.Debug|x86.Build.0 = Debug|Any CPU
-		{3131939B-8E5C-425B-A35A-6E023FBB7788}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3131939B-8E5C-425B-A35A-6E023FBB7788}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3131939B-8E5C-425B-A35A-6E023FBB7788}.Release|x64.ActiveCfg = Release|Any CPU
-		{3131939B-8E5C-425B-A35A-6E023FBB7788}.Release|x64.Build.0 = Release|Any CPU
-		{3131939B-8E5C-425B-A35A-6E023FBB7788}.Release|x86.ActiveCfg = Release|Any CPU
-		{3131939B-8E5C-425B-A35A-6E023FBB7788}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

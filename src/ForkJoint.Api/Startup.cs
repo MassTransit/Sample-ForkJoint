@@ -4,17 +4,15 @@ namespace ForkJoint.Api
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
-    using Automatonymous.Requests;
     using Components;
     using Components.Activities;
     using Components.Consumers;
     using Components.Futures;
     using Components.ItineraryPlanners;
     using Contracts;
-    using ForkJoint.Components;
-    using GreenPipes;
     using MassTransit;
     using MassTransit.EntityFrameworkCoreIntegration;
+    using MassTransit.Futures;
     using Microsoft.ApplicationInsights.DependencyCollector;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.AspNetCore.Builder;
@@ -73,13 +71,6 @@ namespace ForkJoint.Api
                     m.MigrationsHistoryTable($"__{nameof(ForkJointSagaDbContext)}");
                 }));
 
-            services.AddFuture<BurgerFuture>();
-            services.AddFuture<OnionRingsFuture>();
-            services.AddFuture<FryFuture>();
-            services.AddFuture<ShakeFuture>();
-            services.AddFuture<FryShakeFuture>();
-            services.AddFuture<OrderFuture>();
-
             services.AddGenericRequestClient();
 
             services.AddMassTransit(x =>
@@ -100,6 +91,8 @@ namespace ForkJoint.Api
 
                     x.AddActivitiesFromNamespaceContaining<GrillBurgerActivity>();
 
+                    x.AddFuturesFromNamespaceContaining<OrderFuture>();
+
                     x.AddSagaRepository<FutureState>()
                         .EntityFrameworkRepository(r =>
                         {
@@ -111,8 +104,6 @@ namespace ForkJoint.Api
 
                     x.UsingRabbitMq((context, cfg) =>
                     {
-                        // Controllers are using the request client, so we may as well
-                        // start the bus receive endpoint
                         cfg.AutoStart = true;
 
                         cfg.ApplyCustomBusConfiguration();
@@ -123,8 +114,6 @@ namespace ForkJoint.Api
                         cfg.UseRabbitMqMessageScheduler();
 
                         cfg.ConfigureEndpoints(context);
-
-                        cfg.ConfigureFutureEndpoints(context);
                     });
                 })
                 .AddMassTransitHostedService();

@@ -13,7 +13,7 @@ namespace ForkJoint.Tests
 
 
     [TestFixture]
-    public class ShakeFuture_Specs :
+    public class ComboFuture_Specs :
         FutureTestFixture
     {
         [Test]
@@ -26,19 +26,17 @@ namespace ForkJoint.Tests
 
             var scope = Provider.CreateScope();
 
-            var client = scope.ServiceProvider.GetRequiredService<IRequestClient<OrderShake>>();
+            var client = scope.ServiceProvider.GetRequiredService<IRequestClient<OrderCombo>>();
 
-            Response<ShakeCompleted> response = await client.GetResponse<ShakeCompleted>(new
+            Response<ComboCompleted> response = await client.GetResponse<ComboCompleted>(new
             {
                 OrderId = orderId,
                 OrderLineId = orderLineId,
-                Flavor = "Chocolate",
-                Size = Size.Medium
-            });
+                Number = 5
+            }, timeout: RequestTimeout.After(s: 5));
 
             Assert.That(response.Message.OrderId, Is.EqualTo(orderId));
             Assert.That(response.Message.OrderLineId, Is.EqualTo(orderLineId));
-            Assert.That(response.Message.Size, Is.EqualTo(Size.Medium));
             Assert.That(response.Message.Created, Is.GreaterThan(startedAt));
             Assert.That(response.Message.Completed, Is.GreaterThan(response.Message.Created));
         }
@@ -46,13 +44,17 @@ namespace ForkJoint.Tests
         protected override void ConfigureServices(IServiceCollection collection)
         {
             collection.AddSingleton<IShakeMachine, ShakeMachine>();
+            collection.AddSingleton<IFryer, Fryer>();
         }
 
         protected override void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator)
         {
             configurator.AddConsumer<PourShakeConsumer>();
+            configurator.AddConsumer<CookFryConsumer>();
 
+            configurator.AddFuture<FryFuture>();
             configurator.AddFuture<ShakeFuture>();
+            configurator.AddFuture<ComboFuture>();
         }
     }
 }

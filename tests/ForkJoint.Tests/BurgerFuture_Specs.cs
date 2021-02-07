@@ -1,15 +1,14 @@
 namespace ForkJoint.Tests
 {
-    using System;
     using System.Threading.Tasks;
     using Api.Components.Activities;
     using Api.Components.Futures;
     using Api.Components.ItineraryPlanners;
     using Api.Services;
-    using Components;
     using Contracts;
     using MassTransit;
     using MassTransit.ExtensionsDependencyInjectionIntegration;
+    using MassTransit.Futures;
     using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
 
@@ -84,17 +83,14 @@ namespace ForkJoint.Tests
         {
             collection.AddSingleton<IGrill, Grill>();
             collection.AddScoped<IItineraryPlanner<OrderBurger>, BurgerItineraryPlanner>();
-
-            collection.AddFuture<BurgerFuture>();
-            collection.AddFuture<OnionRingsFuture>();
         }
 
         protected override void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator)
         {
             configurator.AddActivitiesFromNamespaceContaining<GrillBurgerActivity>();
 
-            configurator.AddRequestClient<OrderBurger>();
-            configurator.AddRequestClient<OrderOnionRings>();
+            configurator.AddFuture<BurgerFuture>();
+            configurator.AddFuture<OnionRingsFuture>();
         }
     }
 }

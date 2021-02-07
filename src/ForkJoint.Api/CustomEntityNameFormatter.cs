@@ -2,8 +2,8 @@ namespace ForkJoint.Api
 {
     using System;
     using System.Linq;
-    using ForkJoint.Components.Contracts;
     using MassTransit.Contracts.Conductor;
+    using MassTransit.Futures.Contracts;
     using MassTransit.Internals.Extensions;
     using MassTransit.Topology;
 

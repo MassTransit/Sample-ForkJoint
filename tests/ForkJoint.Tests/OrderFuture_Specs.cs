@@ -6,10 +6,10 @@ namespace ForkJoint.Tests
     using Api.Components.Futures;
     using Api.Components.ItineraryPlanners;
     using Api.Services;
-    using Components;
     using Contracts;
     using MassTransit;
     using MassTransit.ExtensionsDependencyInjectionIntegration;
+    using MassTransit.Futures;
     using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
 
@@ -47,13 +47,18 @@ namespace ForkJoint.Tests
                         BurgerId = burgerId,
                         Weight = 1.0m,
                         Cheese = true,
+                        OnionRing = true,
+                        BarbecueSauce = true
                     }
                 },
                 Shakes = default(Shake[]),
                 FryShakes = default(FryShake[])
-            });
+            }, timeout: TestHarness.TestTimeout);
 
             Assert.That(response.Is(out Response<OrderCompleted> completed), "Order did not complete");
+
+            Assert.That(completed.Message.OrderId, Is.EqualTo(orderId));
+            Assert.That(completed.Message.LinesCompleted.Count, Is.EqualTo(2));
         }
 
         [Test]
@@ -187,13 +192,6 @@ namespace ForkJoint.Tests
             collection.AddSingleton<IGrill, Grill>();
             collection.AddScoped<IItineraryPlanner<OrderBurger>, BurgerItineraryPlanner>();
             collection.AddSingleton<IFryer, Fryer>();
-
-            collection.AddFuture<BurgerFuture>();
-            collection.AddFuture<OnionRingsFuture>();
-            collection.AddFuture<FryFuture>();
-            collection.AddFuture<ShakeFuture>();
-            collection.AddFuture<FryShakeFuture>();
-            collection.AddFuture<OrderFuture>();
         }
 
         protected override void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator)
@@ -202,8 +200,7 @@ namespace ForkJoint.Tests
             configurator.AddConsumer<CookOnionRingsConsumer>();
             configurator.AddActivitiesFromNamespaceContaining<GrillBurgerActivity>();
 
-            configurator.AddRequestClient<SubmitOrder>();
-            configurator.AddRequestClient<OrderOnionRings>();
+            configurator.AddFuturesFromNamespaceContaining<OrderFuture>();
         }
     }
 }

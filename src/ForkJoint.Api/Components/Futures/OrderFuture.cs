@@ -1,39 +1,93 @@
 namespace ForkJoint.Api.Components.Futures
 {
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
-    using Automatonymous;
     using Contracts;
-    using FutureActivities;
     using MassTransit;
+    using MassTransit.Futures;
 
 
-    // ReSharper disable UnassignedGetOnlyAutoProperty
-    // ReSharper disable MemberCanBePrivate.Global
     public class OrderFuture :
-        OrderLineFuture<SubmitOrder, OrderCompleted, OrderFaulted>
+        Future<SubmitOrder, OrderCompleted, OrderFaulted>
     {
         public OrderFuture()
         {
             Event(() => FutureRequested, x => x.CorrelateById(context => context.Message.OrderId));
 
-            Initially(
-                When(FutureRequested)
-                    .Activity(x => x.OfType<OrderBurgersActivity>())
-                    .Activity(x => x.OfType<OrderFriesActivity>())
-                    .Activity(x => x.OfType<OrderShakesActivity>())
-                    .Activity(x => x.OfType<OrderFryShakesActivity>())
-            );
+            SendRequests<Burger, OrderBurger, BurgerCompleted>(x => x.Burgers, x =>
+            {
+                x.Pending(m => m.OrderLineId, m => m.OrderLineId);
+                x.Command(c =>
+                {
+                    c.Init(context => new
+                    {
+                        OrderId = context.Instance.CorrelationId,
+                        OrderLineId = context.Message.BurgerId,
+                        Burger = context.Message
+                    });
+                });
+            });
+
+            SendRequests<Fry, OrderFry, FryCompleted>(x => x.Fries, x =>
+            {
+                x.Pending(m => m.OrderLineId, m => m.OrderLineId);
+                x.Command(c =>
+                {
+                    c.Init(context => new
+                    {
+                        OrderId = context.Instance.CorrelationId,
+                        OrderLineId = context.Message.FryId,
+                        context.Message.Size,
+                    });
+                });
+            });
+
+            SendRequests<Shake, OrderShake, ShakeCompleted>(x => x.Shakes, x =>
+            {
+                x.Pending(m => m.OrderLineId, m => m.OrderLineId);
+                x.Command(c =>
+                {
+                    c.Init(context => new
+                    {
+                        OrderId = context.Instance.CorrelationId,
+                        OrderLineId = context.Message.ShakeId,
+                        context.Message.Size,
+                        context.Message.Flavor
+                    });
+                });
+            });
+
+            SendRequests<FryShake, OrderFryShake, FryShakeCompleted>(x => x.FryShakes, x =>
+            {
+                x.Pending(m => m.OrderLineId, m => m.OrderLineId);
+                x.Command(c =>
+                {
+                    c.Init(context => new
+                    {
+                        OrderId = context.Instance.CorrelationId,
+                        OrderLineId = context.Message.FryShakeId,
+                        context.Message.Size,
+                        context.Message.Flavor
+                    });
+                });
+            });
 
             Response(r => r.Init(context => new
             {
                 LinesCompleted = context.Instance.Results.Select(x => x.Value.ToObject<OrderLineCompleted>()).ToDictionary(x => x.OrderLineId),
             }));
 
-            Fault(f => f.Init(context => new
+            Fault(f => f.Init(context =>
             {
-                LinesCompleted = context.Instance.Results.Select(x => x.Value.ToObject<OrderLineCompleted>()).ToDictionary(x => x.OrderLineId),
-                LinesFaulted = context.Instance.Faults.Select(x => x.Value.ToObject<Fault<OrderLine>>()).ToDictionary(x => x.Message.OrderLineId),
-                Exceptions = context.Instance.Faults.SelectMany(x => x.Value.ToObject<Fault>().Exceptions).ToArray()
+                Dictionary<Guid, Fault> faults = context.Instance.Faults.ToDictionary(x => x.Key, x => x.Value.ToObject<Fault>());
+
+                return new
+                {
+                    LinesCompleted = context.Instance.Results.ToDictionary(x => x.Key, x => x.Value.ToObject<OrderLineCompleted>()),
+                    LinesFaulted = faults,
+                    Exceptions = faults.SelectMany(x => x.Value.Exceptions).ToArray()
+                };
             }));
         }
     }

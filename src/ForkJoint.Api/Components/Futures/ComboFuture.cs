@@ -5,27 +5,29 @@ namespace ForkJoint.Api.Components.Futures
     using MassTransit.Futures;
 
 
-    public class FryShakeFuture :
-        Future<OrderFryShake, FryShakeCompleted>
+    public class ComboFuture :
+        Future<OrderCombo, ComboCompleted>
     {
-        public FryShakeFuture()
+        public ComboFuture()
         {
             Event(() => FutureRequested, x => x.CorrelateById(context => context.Message.OrderLineId));
 
             SendRequest<OrderFry, FryCompleted>(x =>
             {
                 x.Pending(m => m.OrderLineId, m => m.OrderLineId);
+
                 x.Command(c =>
                 {
                     c.Init(context => new
                     {
                         OrderId = context.Instance.CorrelationId,
                         OrderLineId = InVar.Id,
-                        context.Message.Size,
+                        Size = Size.Medium,
                     });
                 });
             });
 
+            // change to SendRequest()/GetResponse() to resolve results separately!
             SendRequest<OrderShake, ShakeCompleted>(x =>
             {
                 x.Pending(m => m.OrderLineId, m => m.OrderLineId);
@@ -36,18 +38,14 @@ namespace ForkJoint.Api.Components.Futures
                     {
                         OrderId = context.Instance.CorrelationId,
                         OrderLineId = InVar.Id,
-                        context.Message.Flavor,
-                        context.Message.Size,
+                        Size = Size.Medium,
+                        Flavor = "Chocolate",
                     });
                 });
             });
 
-            Response(x => x.Init(context =>
-            {
-                var message = context.Instance.GetRequest<OrderFryShake>();
 
-                return new {Description = $"{message.Size} {message.Flavor} FryShake({context.Instance.Results.Count})"};
-            }));
+            Response(x => x.Init(context => new {Description = "Simple Combo"}));
         }
     }
 }

@@ -1,10 +1,11 @@
 namespace ForkJoint.Tests
 {
+    using System;
     using System.Threading.Tasks;
-    using Components;
     using MassTransit;
     using MassTransit.Context;
     using MassTransit.ExtensionsDependencyInjectionIntegration;
+    using MassTransit.Futures;
     using MassTransit.Testing;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -30,7 +31,8 @@ namespace ForkJoint.Tests
                     cfg.SetKebabCaseEndpointNameFormatter();
 
                     ConfigureMassTransit(cfg);
-                });
+                })
+                .AddGenericRequestClient();
 
             ConfigureServices(collection);
 
@@ -39,10 +41,9 @@ namespace ForkJoint.Tests
             ConfigureLogging();
 
             TestHarness = Provider.GetRequiredService<InMemoryTestHarness>();
+            TestHarness.TestTimeout = TimeSpan.FromSeconds(10);
             TestHarness.OnConfigureInMemoryBus += configurator =>
             {
-                configurator.ConfigureFutureEndpoints(Provider);
-
                 ConfigureInMemoryBus(configurator);
             };
 

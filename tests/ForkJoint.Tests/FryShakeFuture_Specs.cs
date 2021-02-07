@@ -5,7 +5,6 @@ namespace ForkJoint.Tests
     using Api.Components.Consumers;
     using Api.Components.Futures;
     using Api.Services;
-    using Components;
     using Contracts;
     using MassTransit;
     using MassTransit.ExtensionsDependencyInjectionIntegration;
@@ -42,16 +41,13 @@ namespace ForkJoint.Tests
             Assert.That(response.Message.Size, Is.EqualTo(Size.Medium));
             Assert.That(response.Message.Created, Is.GreaterThan(startedAt));
             Assert.That(response.Message.Completed, Is.GreaterThan(response.Message.Created));
+            Assert.That(response.Message.Description, Contains.Substring("FryShake(2)"));
         }
 
         protected override void ConfigureServices(IServiceCollection collection)
         {
             collection.AddSingleton<IShakeMachine, ShakeMachine>();
             collection.AddSingleton<IFryer, Fryer>();
-
-            collection.AddFuture<FryFuture>();
-            collection.AddFuture<ShakeFuture>();
-            collection.AddFuture<FryShakeFuture>();
         }
 
         protected override void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator)
@@ -59,7 +55,9 @@ namespace ForkJoint.Tests
             configurator.AddConsumer<PourShakeConsumer>();
             configurator.AddConsumer<CookFryConsumer>();
 
-            configurator.AddRequestClient<OrderFryShake>();
+            configurator.AddFuture<FryFuture>();
+            configurator.AddFuture<ShakeFuture>();
+            configurator.AddFuture<FryShakeFuture>();
         }
     }
 }

@@ -1,8 +1,8 @@
 namespace ForkJoint.Tests
 {
     using System;
-    using Components;
     using MassTransit;
+    using MassTransit.Futures;
     using NUnit.Framework;
 
 

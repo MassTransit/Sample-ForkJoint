@@ -1,27 +1,30 @@
 namespace ForkJoint.Api.Components.Futures
 {
     using Contracts;
-    using ForkJoint.Components;
     using MassTransit.Courier;
+    using MassTransit.Futures;
 
 
     public class BurgerFuture :
-        RoutingSlipFuture<OrderBurger, BurgerCompleted>
+        Future<OrderBurger, BurgerCompleted>
     {
         public BurgerFuture()
         {
             Event(() => FutureRequested, x => x.CorrelateById(context => context.Message.Burger.BurgerId));
 
-            Response(x => x.Init(context =>
+            ExecuteRoutingSlip(x =>
             {
-                var burger = context.Message.GetVariable<Burger>(nameof(BurgerCompleted.Burger));
-
-                return new
+                x.Response(r => r.Init(context =>
                 {
-                    Burger = burger,
-                    Description = burger.ToString()
-                };
-            }));
+                    var burger = context.Message.GetVariable<Burger>(nameof(BurgerCompleted.Burger));
+
+                    return new
+                    {
+                        Burger = burger,
+                        Description = burger.ToString()
+                    };
+                }));
+            });
         }
     }
 }

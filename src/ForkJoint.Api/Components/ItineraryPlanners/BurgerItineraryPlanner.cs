@@ -4,27 +4,27 @@ namespace ForkJoint.Api.Components.ItineraryPlanners
     using System.Threading.Tasks;
     using Activities;
     using Contracts;
-    using ForkJoint.Components;
     using MassTransit;
     using MassTransit.Courier;
+    using MassTransit.Futures;
 
 
     public class BurgerItineraryPlanner :
         IItineraryPlanner<OrderBurger>
     {
-        readonly ConsumeContext _consumeContext;
         readonly Uri _dressAddress;
         readonly Uri _grillAddress;
 
-        public BurgerItineraryPlanner(IEndpointNameFormatter formatter, ConsumeContext consumeContext)
+        public BurgerItineraryPlanner(IEndpointNameFormatter formatter)
         {
-            _consumeContext = consumeContext;
             _grillAddress = new Uri($"exchange:{formatter.ExecuteActivity<GrillBurgerActivity, GrillBurgerArguments>()}");
             _dressAddress = new Uri($"exchange:{formatter.ExecuteActivity<DressBurgerActivity, DressBurgerArguments>()}");
         }
 
-        public async Task PlanItinerary(OrderBurger orderBurger, ItineraryBuilder builder)
+        public async Task PlanItinerary(FutureConsumeContext<OrderBurger> context, ItineraryBuilder builder)
         {
+            var orderBurger = context.Message;
+
             builder.AddVariable(nameof(OrderBurger.OrderId), orderBurger.OrderId);
             builder.AddVariable(nameof(OrderBurger.OrderLineId), orderBurger.OrderLineId);
 
@@ -42,7 +42,7 @@ namespace ForkJoint.Api.Components.ItineraryPlanners
                 onionRingId = NewId.NextGuid();
 
                 // TODO create a future with address/id
-                await _consumeContext.Publish<OrderOnionRings>(new
+                await context.Publish<OrderOnionRings>(new
                 {
                     orderBurger.OrderId,
                     OrderLineId = onionRingId,

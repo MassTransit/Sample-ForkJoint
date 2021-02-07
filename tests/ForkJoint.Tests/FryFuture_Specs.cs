@@ -5,7 +5,6 @@ namespace ForkJoint.Tests
     using Api.Components.Consumers;
     using Api.Components.Futures;
     using Api.Services;
-    using Components;
     using Contracts;
     using MassTransit;
     using MassTransit.ExtensionsDependencyInjectionIntegration;
@@ -46,15 +45,12 @@ namespace ForkJoint.Tests
         protected override void ConfigureServices(IServiceCollection collection)
         {
             collection.AddSingleton<IFryer, Fryer>();
-
-            collection.AddFuture<FryFuture>();
         }
 
         protected override void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator)
         {
             configurator.AddConsumer<CookFryConsumer>();
-
-            configurator.AddRequestClient<OrderFry>();
+            configurator.AddFuture<FryFuture>();
         }
     }
 }

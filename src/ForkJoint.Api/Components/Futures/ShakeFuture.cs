@@ -1,28 +1,20 @@
 namespace ForkJoint.Api.Components.Futures
 {
     using Contracts;
-    using ForkJoint.Components;
+    using MassTransit.Futures;
 
 
     public class ShakeFuture :
-        RequestFuture<OrderShake, ShakeCompleted, PourShake, ShakeReady>
+        Future<OrderShake, ShakeCompleted>
     {
         public ShakeFuture()
         {
             Event(() => FutureRequested, x => x.CorrelateById(context => context.Message.OrderLineId));
 
-            // this isn't needed but shown for completeness
-            Command(x => x.Init(context => new
+            SendRequest<PourShake, ShakeReady>(x =>
             {
-                context.Message.Flavor,
-                context.Message.Size
-            }));
-
-            Response(x => x.Init(context => new
-            {
-                // only need the calculated property
-                Description = $"{context.Message.Size} {context.Message.Flavor} Shake"
-            }));
+                x.Response(r => r.Init(context => new {Description = $"{context.Message.Size} {context.Message.Flavor} Shake"}));
+            });
         }
     }
 }
