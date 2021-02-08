@@ -10,21 +10,20 @@ namespace ForkJoint.Api.Components.Futures
     {
         public BurgerFuture()
         {
-            Event(() => FutureRequested, x => x.CorrelateById(context => context.Message.Burger.BurgerId));
+            ConfigureCommand(x => x.CorrelateById(context => context.Message.OrderLineId));
 
-            ExecuteRoutingSlip(x =>
-            {
-                x.Response(r => r.Init(context =>
-                {
-                    var burger = context.Message.GetVariable<Burger>(nameof(BurgerCompleted.Burger));
-
-                    return new
+            ExecuteRoutingSlip(x => x
+                .OnRoutingSlipCompleted(r => r
+                    .SetCompletedUsingInitializer(context =>
                     {
-                        Burger = burger,
-                        Description = burger.ToString()
-                    };
-                }));
-            });
+                        var burger = context.Message.GetVariable<Burger>(nameof(BurgerCompleted.Burger));
+
+                        return new
+                        {
+                            Burger = burger,
+                            Description = burger.ToString()
+                        };
+                    })));
         }
     }
 }

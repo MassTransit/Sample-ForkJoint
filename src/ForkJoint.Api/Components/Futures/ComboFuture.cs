@@ -1,5 +1,6 @@
 namespace ForkJoint.Api.Components.Futures
 {
+    using System.Linq;
     using Contracts;
     using MassTransit;
     using MassTransit.Futures;
@@ -10,42 +11,46 @@ namespace ForkJoint.Api.Components.Futures
     {
         public ComboFuture()
         {
-            Event(() => FutureRequested, x => x.CorrelateById(context => context.Message.OrderLineId));
+            Event(() => CommandReceived, x => x.CorrelateById(context => context.Message.OrderLineId));
 
-            SendRequest<OrderFry, FryCompleted>(x =>
-            {
-                x.Pending(m => m.OrderLineId, m => m.OrderLineId);
-
-                x.Command(c =>
+            var fry = SendRequest<OrderFry>(x =>
                 {
-                    c.Init(context => new
+                    x.UsingRequestInitializer(context => new
                     {
                         OrderId = context.Instance.CorrelationId,
                         OrderLineId = InVar.Id,
-                        Size = Size.Medium,
+                        Size = Size.Medium
                     });
-                });
-            });
 
-            // change to SendRequest()/GetResponse() to resolve results separately!
-            SendRequest<OrderShake, ShakeCompleted>(x =>
-            {
-                x.Pending(m => m.OrderLineId, m => m.OrderLineId);
+                    x.TrackPendingRequest(message => message.OrderLineId);
+                })
+                .OnResponseReceived<FryCompleted>(x => x.CompletePendingRequest(message => message.OrderLineId));
 
-                x.Command(c =>
+            var shake = SendRequest<OrderShake>(x =>
                 {
-                    c.Init(context => new
+                    x.UsingRequestInitializer(context => new
                     {
                         OrderId = context.Instance.CorrelationId,
                         OrderLineId = InVar.Id,
                         Size = Size.Medium,
                         Flavor = "Chocolate",
                     });
+
+                    x.TrackPendingRequest(message => message.OrderLineId);
+                })
+                .OnResponseReceived<ShakeCompleted>(x => x.CompletePendingRequest(message => message.OrderLineId));
+
+
+            WhenAllCompleted(x =>
+            {
+                x.SetCompletedUsingInitializer(context =>
+                {
+                    var fryCompleted = context.SelectResults<FryCompleted>().FirstOrDefault();
+                    var shakeCompleted = context.SelectResults<ShakeCompleted>().FirstOrDefault();
+
+                    return new {Description = $"Combo ({fryCompleted.Description}, {shakeCompleted.Description})"};
                 });
             });
-
-
-            Response(x => x.Init(context => new {Description = "Simple Combo"}));
         }
     }
 }

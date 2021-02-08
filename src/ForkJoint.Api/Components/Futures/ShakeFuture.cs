@@ -9,12 +9,11 @@ namespace ForkJoint.Api.Components.Futures
     {
         public ShakeFuture()
         {
-            Event(() => FutureRequested, x => x.CorrelateById(context => context.Message.OrderLineId));
+            ConfigureCommand(x => x.CorrelateById(context => context.Message.OrderLineId));
 
-            SendRequest<PourShake, ShakeReady>(x =>
-            {
-                x.Response(r => r.Init(context => new {Description = $"{context.Message.Size} {context.Message.Flavor} Shake"}));
-            });
+            SendRequest<PourShake>()
+                .OnResponseReceived<ShakeReady>(x =>
+                    x.SetCompletedUsingInitializer(context => new {Description = $"{context.Message.Size} {context.Message.Flavor} Shake"}));
         }
     }
 }

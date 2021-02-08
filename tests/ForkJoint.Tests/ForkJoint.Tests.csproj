@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MassTransit.EntityFrameworkCore" Version="7.2.0-develop.3288" />
-    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.2.0-develop.3288" />
+    <PackageReference Include="MassTransit.EntityFrameworkCore" Version="7.2.0-develop.3289" />
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.2.0-develop.3289" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.11">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
