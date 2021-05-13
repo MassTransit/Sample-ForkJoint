@@ -17,16 +17,12 @@ namespace ForkJoint.Api.Components
             entity.Property(x => x.CurrentState);
 
             entity.Property(x => x.Created);
-            entity.Property(x => x.Deadline);
             entity.Property(x => x.Completed);
-            entity.Property(x => x.Canceled);
             entity.Property(x => x.Faulted);
 
             entity.Property(x => x.Location);
 
-            entity.Property(x => x.RetryAttempt);
-
-            entity.Property(x => x.Request).HasConversion(new JsonValueConverter<FutureMessage>())
+            entity.Property(x => x.Command).HasConversion(new JsonValueConverter<FutureMessage>())
                 .Metadata.SetValueComparer(new JsonValueComparer<FutureMessage>());
             entity.Property(x => x.Pending)
                 .HasConversion(new JsonValueConverter<HashSet<Guid>>())

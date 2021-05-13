@@ -77,7 +77,7 @@ namespace ForkJoint.Api
                 {
                     x.ApplyCustomMassTransitConfiguration();
 
-                    x.AddRabbitMqMessageScheduler();
+                    x.AddDelayedMessageScheduler();
 
                     x.SetEntityFrameworkSagaRepositoryProvider(r =>
                     {
@@ -111,7 +111,7 @@ namespace ForkJoint.Api
                         if (IsRunningInContainer)
                             cfg.Host("rabbitmq");
 
-                        cfg.UseRabbitMqMessageScheduler();
+                        cfg.UseDelayedMessageScheduler();
 
                         cfg.ConfigureEndpoints(context);
                     });
