@@ -1,4 +1,7 @@
+using MassTransit;
 using Microsoft.Extensions.Hosting;
+using Serilog.Events;
+using Serilog;
 
 namespace ForkJoint.Service
 {
@@ -6,14 +9,34 @@ namespace ForkJoint.Service
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .CreateLogger();
+
+            try
+            {
+                CreateHostBuilder(args).Build().Run();
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
-                    
-                });
+                    services.AddMassTransit(cfg =>
+                    {
+
+                    });
+
+                    services.AddMassTransitHostedService();
+                })
+                .UseSerilog();
     }
 }
