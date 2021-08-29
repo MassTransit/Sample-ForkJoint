@@ -4,7 +4,7 @@ namespace ForkJoint.Api.Components.Futures
     using Contracts;
     using MassTransit;
     using MassTransit.Futures;
-
+    using MassTransit.Registration;
 
     public class ComboFuture :
         Future<OrderCombo, ComboCompleted>
@@ -51,6 +51,14 @@ namespace ForkJoint.Api.Components.Futures
                     return new {Description = $"Combo ({fryCompleted.Description}, {shakeCompleted.Description})"};
                 });
             });
+        }
+    }
+
+    public class ComboFutureDefinition : FutureDefinition<ComboFuture>
+    {
+        public ComboFutureDefinition()
+        {
+            ConcurrentMessageLimit = 32;
         }
     }
 }

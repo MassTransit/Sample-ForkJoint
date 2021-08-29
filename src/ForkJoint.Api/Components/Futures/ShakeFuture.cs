@@ -2,7 +2,7 @@ namespace ForkJoint.Api.Components.Futures
 {
     using Contracts;
     using MassTransit.Futures;
-
+    using MassTransit.Registration;
 
     public class ShakeFuture :
         Future<OrderShake, ShakeCompleted>
@@ -14,6 +14,14 @@ namespace ForkJoint.Api.Components.Futures
             SendRequest<PourShake>()
                 .OnResponseReceived<ShakeReady>(x =>
                     x.SetCompletedUsingInitializer(context => new {Description = $"{context.Message.Size} {context.Message.Flavor} Shake"}));
+        }
+    }
+
+    public class ShakeFutureDefinition : FutureDefinition<ShakeFuture>
+    {
+        public ShakeFutureDefinition()
+        {
+            ConcurrentMessageLimit = 32;
         }
     }
 }

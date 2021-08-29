@@ -3,7 +3,7 @@ namespace ForkJoint.Api.Components.Futures
     using Contracts;
     using MassTransit;
     using MassTransit.Futures;
-
+    using MassTransit.Registration;
 
     public class FryShakeFuture :
         Future<OrderFryShake, FryShakeCompleted>
@@ -52,6 +52,14 @@ namespace ForkJoint.Api.Components.Futures
 
                 return new {Description = $"{message.Size} {message.Flavor} FryShake({context.Instance.Results.Count})"};
             }));
+        }
+    }
+
+    public class FryShakeFutureDefinition : FutureDefinition<FryShakeFuture>
+    {
+        public FryShakeFutureDefinition()
+        {
+            ConcurrentMessageLimit = 32;
         }
     }
 }

@@ -2,7 +2,7 @@ namespace ForkJoint.Api.Components.Futures
 {
     using Contracts;
     using MassTransit.Futures;
-
+    using MassTransit.Registration;
 
     public class OnionRingsFuture :
         Future<OrderOnionRings, OnionRingsCompleted>
@@ -16,6 +16,14 @@ namespace ForkJoint.Api.Components.Futures
                 {
                     x.SetCompletedUsingInitializer(context => new {Description = $"{context.Message.Quantity} Onion Rings"});
                 });
+        }
+    }
+
+    public class OnionRingsFutureDefinition : FutureDefinition<OnionRingsFuture>
+    {
+        public OnionRingsFutureDefinition()
+        {
+            ConcurrentMessageLimit = 32;
         }
     }
 }

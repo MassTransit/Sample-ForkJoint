@@ -3,7 +3,7 @@ namespace ForkJoint.Api.Components.Futures
     using Contracts;
     using MassTransit.Courier;
     using MassTransit.Futures;
-
+    using MassTransit.Registration;
 
     public class BurgerFuture :
         Future<OrderBurger, BurgerCompleted>
@@ -24,6 +24,14 @@ namespace ForkJoint.Api.Components.Futures
                             Description = burger.ToString()
                         };
                     })));
+        }
+    }
+
+    public class BurgerFutureDefinition : FutureDefinition<BurgerFuture>
+    {
+        public BurgerFutureDefinition()
+        {
+            ConcurrentMessageLimit = 32;
         }
     }
 }

@@ -3,6 +3,7 @@ namespace ForkJoint.Api.Components.Consumers
     using System.Threading.Tasks;
     using Contracts;
     using MassTransit;
+    using MassTransit.Definition;
     using Services;
 
 
@@ -26,6 +27,14 @@ namespace ForkJoint.Api.Components.Consumers
                 context.Message.OrderLineId,
                 context.Message.Size
             });
+        }
+    }
+
+    public class CookFryConsumerDefinition: ConsumerDefinition<CookFryConsumer>
+    {
+        public CookFryConsumerDefinition()
+        {
+            ConcurrentMessageLimit = 32;
         }
     }
 }

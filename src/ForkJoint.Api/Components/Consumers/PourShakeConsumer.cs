@@ -3,6 +3,7 @@ namespace ForkJoint.Api.Components.Consumers
     using System.Threading.Tasks;
     using Contracts;
     using MassTransit;
+    using MassTransit.Definition;
     using Services;
 
 
@@ -28,6 +29,14 @@ namespace ForkJoint.Api.Components.Consumers
                 context.Message.Flavor,
                 context.Message.Size
             });
+        }
+    }
+
+    public class PourShakeConsumerDefinition : ConsumerDefinition<PourShakeConsumer>
+    {
+        public PourShakeConsumerDefinition()
+        {
+            ConcurrentMessageLimit = 32;
         }
     }
 }

@@ -2,6 +2,7 @@ namespace ForkJoint.Api.Components.Activities
 {
     using System.Threading.Tasks;
     using MassTransit.Courier;
+    using MassTransit.Definition;
     using Microsoft.Extensions.Logging;
     using Services;
 
@@ -22,7 +23,7 @@ namespace ForkJoint.Api.Components.Activities
         {
             var patty = await _grill.CookOrUseExistingPatty(context.Arguments.Weight, context.Arguments.Cheese);
 
-            return context.CompletedWithVariables<GrillBurgerLog>(new {patty}, new {patty});
+            return context.CompletedWithVariables<GrillBurgerLog>(new { patty }, new { patty });
         }
 
         public Task<CompensationResult> Compensate(CompensateContext<GrillBurgerLog> context)
@@ -34,6 +35,14 @@ namespace ForkJoint.Api.Components.Activities
             _grill.Add(patty);
 
             return Task.FromResult(context.Compensated());
+        }
+    }
+
+    public class GrillBurgerActivityefinition : ActivityDefinition<GrillBurgerActivity, GrillBurgerArguments, GrillBurgerLog>
+    {
+        public GrillBurgerActivityefinition()
+        {
+            ConcurrentMessageLimit = 32;
         }
     }
 }

@@ -6,7 +6,7 @@ namespace ForkJoint.Api.Components.Futures
     using Contracts;
     using MassTransit;
     using MassTransit.Futures;
-
+    using MassTransit.Registration;
 
     public class OrderFuture :
         Future<SubmitOrder, OrderCompleted, OrderFaulted>
@@ -104,6 +104,14 @@ namespace ForkJoint.Api.Components.Futures
                 LinesFaulted = faults,
                 Exceptions = faults.SelectMany(x => x.Value.Exceptions).ToArray()
             };
+        }
+    }
+
+    public class OrderFutureDefinition : FutureDefinition<OrderFuture>
+    {
+        public OrderFutureDefinition()
+        {
+            ConcurrentMessageLimit = 32;
         }
     }
 }

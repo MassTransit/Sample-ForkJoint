@@ -5,6 +5,7 @@ namespace ForkJoint.Api.Components.Activities
     using Contracts;
     using MassTransit;
     using MassTransit.Courier;
+    using MassTransit.Definition;
     using Microsoft.Extensions.Logging;
 
 
@@ -62,7 +63,15 @@ namespace ForkJoint.Api.Components.Activities
                 OnionRing = arguments.OnionRing
             };
 
-            return context.CompletedWithVariables(new {burger});
+            return context.CompletedWithVariables(new { burger });
+        }
+    }
+
+    public class DressBurgerActivityDefinition : ExecuteActivityDefinition<DressBurgerActivity, DressBurgerArguments>
+    {
+        public DressBurgerActivityDefinition()
+        {
+            ConcurrentMessageLimit = 32;
         }
     }
 }

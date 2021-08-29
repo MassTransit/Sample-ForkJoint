@@ -2,7 +2,7 @@ namespace ForkJoint.Api.Components.Futures
 {
     using Contracts;
     using MassTransit.Futures;
-
+    using MassTransit.Registration;
 
     public class FryFuture :
         Future<OrderFry, FryCompleted>
@@ -24,6 +24,14 @@ namespace ForkJoint.Api.Components.Futures
                         context.Message.Size,
                         $"{context.Message.Size} Fries"));
                 });
+        }
+    }
+
+    public class FryFutureDefinition : FutureDefinition<FryFuture>
+    {
+        public FryFutureDefinition()
+        {
+            ConcurrentMessageLimit = 32;
         }
     }
 }
