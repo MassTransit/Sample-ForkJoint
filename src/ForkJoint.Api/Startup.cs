@@ -47,11 +47,6 @@ namespace ForkJoint.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.TryAddScoped<IItineraryPlanner<OrderBurger>, BurgerItineraryPlanner>();
-            services.TryAddSingleton<IGrill, Grill>();
-            services.TryAddSingleton<IFryer, Fryer>();
-            services.TryAddSingleton<IShakeMachine, ShakeMachine>();
-
             services.AddApplicationInsightsTelemetry(options =>
             {
                 options.EnableDependencyTrackingTelemetryModule = true;
@@ -64,13 +59,6 @@ namespace ForkJoint.Api
             });
             services.AddSingleton<ITelemetryInitializer, HttpDependenciesParsingTelemetryInitializer>();
 
-            services.AddDbContext<ForkJointSagaDbContext>(builder =>
-                builder.UseSqlServer(GetConnectionString(), m =>
-                {
-                    m.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name);
-                    m.MigrationsHistoryTable($"__{nameof(ForkJointSagaDbContext)}");
-                }));
-
             services.AddGenericRequestClient();
 
             services.AddMassTransit(x =>
@@ -78,29 +66,6 @@ namespace ForkJoint.Api
                     x.ApplyCustomMassTransitConfiguration();
 
                     x.AddDelayedMessageScheduler();
-
-                    x.SetEntityFrameworkSagaRepositoryProvider(r =>
-                    {
-                        r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
-                        r.LockStatementProvider = new SqlServerLockStatementProvider();
-
-                        r.ExistingDbContext<ForkJointSagaDbContext>();
-                    });
-
-                    x.AddConsumersFromNamespaceContaining<CookOnionRingsConsumer>();
-
-                    x.AddActivitiesFromNamespaceContaining<GrillBurgerActivity>();
-
-                    x.AddFuturesFromNamespaceContaining<OrderFuture>();
-
-                    x.AddSagaRepository<FutureState>()
-                        .EntityFrameworkRepository(r =>
-                        {
-                            r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
-                            r.LockStatementProvider = new SqlServerLockStatementProvider();
-
-                            r.ExistingDbContext<ForkJointSagaDbContext>();
-                        });
 
                     x.UsingRabbitMq((context, cfg) =>
                     {
@@ -127,16 +92,6 @@ namespace ForkJoint.Api
                     Version = "v1"
                 });
             });
-        }
-
-        string GetConnectionString()
-        {
-            var connectionString = Configuration.GetConnectionString("ForkJoint");
-
-            if (IsRunningInContainer)
-                connectionString = connectionString.Replace("localhost", "mssql");
-
-            return connectionString;
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
