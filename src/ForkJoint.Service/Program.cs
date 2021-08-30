@@ -11,6 +11,9 @@ namespace ForkJoint.Service
     using MassTransit;
     using MassTransit.EntityFrameworkCoreIntegration;
     using MassTransit.Futures;
+    using Microsoft.ApplicationInsights;
+    using Microsoft.ApplicationInsights.DependencyCollector;
+    using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +27,9 @@ namespace ForkJoint.Service
     public class Program
     {
         static bool? _isRunningInContainer;
+
+        private static DependencyTrackingTelemetryModule dependencyTrackingTelemetryModule;
+        private static TelemetryClient telemetryClient;
 
         static bool IsRunningInContainer =>
             _isRunningInContainer ??= bool.TryParse(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), out var inContainer) && inContainer;
@@ -55,18 +61,8 @@ namespace ForkJoint.Service
                     services.TryAddSingleton<IGrill, Grill>();
                     services.TryAddSingleton<IFryer, Fryer>();
                     services.TryAddSingleton<IShakeMachine, ShakeMachine>();
-
-                    //services.AddApplicationInsightsTelemetry(options =>
-                    //{
-                    //    options.EnableDependencyTrackingTelemetryModule = true;
-                    //});
-                    //services.AddApplicationInsightsTelemetryProcessor<NoSqlTelemetryProcessor>();
-
-                    //services.ConfigureTelemetryModule<DependencyTrackingTelemetryModule>((module, o) =>
-                    //{
-                    //    module.IncludeDiagnosticSourceActivities.Add("MassTransit");
-                    //});
-                    //services.AddSingleton<ITelemetryInitializer, HttpDependenciesParsingTelemetryInitializer>();
+                    
+                    AddTelemetry(hostContext, services);
 
                     services.AddDbContext<ForkJointSagaDbContext>(builder =>
                         builder.UseSqlServer(GetConnectionString(hostContext), m =>
@@ -124,6 +120,41 @@ namespace ForkJoint.Service
                     services.AddMassTransitHostedService();
                 })
                 .UseSerilog();
+
+        private static void AddTelemetry(HostBuilderContext hostBuilderContext,IServiceCollection services)
+        {
+            var instrumentationKey = hostBuilderContext.Configuration.GetSection("ApplicationInsights:InstrumentationKey").Value;
+
+            if (!string.IsNullOrEmpty(instrumentationKey))
+            {
+                dependencyTrackingTelemetryModule = new DependencyTrackingTelemetryModule();
+
+                dependencyTrackingTelemetryModule.IncludeDiagnosticSourceActivities.Add("MassTransit");
+
+                TelemetryConfiguration configuration = TelemetryConfiguration.CreateDefault();
+
+                configuration.TelemetryProcessorChainBuilder.Use(next => new NoSqlTelemetryProcessor(next));
+
+                configuration.InstrumentationKey = instrumentationKey;
+                configuration.TelemetryInitializers.Add(new HttpDependenciesParsingTelemetryInitializer());
+
+                telemetryClient = new TelemetryClient(configuration);
+
+                dependencyTrackingTelemetryModule.Initialize(configuration);
+            }
+
+            //services.AddApplicationInsightsTelemetry(options =>
+            //{
+            //    options.EnableDependencyTrackingTelemetryModule = true;
+            //});
+            //services.AddApplicationInsightsTelemetryProcessor<NoSqlTelemetryProcessor>();
+
+            //services.ConfigureTelemetryModule<DependencyTrackingTelemetryModule>((module, o) =>
+            //{
+            //    module.IncludeDiagnosticSourceActivities.Add("MassTransit");
+            //});
+            //services.AddSingleton<ITelemetryInitializer, HttpDependenciesParsingTelemetryInitializer>();
+        }
 
         static string GetConnectionString(HostBuilderContext hostBuilderContext)
         {
