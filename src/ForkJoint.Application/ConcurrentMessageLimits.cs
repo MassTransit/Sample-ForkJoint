@@ -2,6 +2,6 @@
 {
     public static class ConcurrentMessageLimits
     {
-        public static int GlobalValue = 128;
+        public static int GlobalValue = 64;
     }
 }

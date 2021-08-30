@@ -1,12 +1,13 @@
 namespace ForkJoint.Application.Components.Futures
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using Contracts;
+    using GreenPipes;
     using MassTransit;
     using MassTransit.Futures;
     using MassTransit.Registration;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
 
     public class OrderFuture :
         Future<SubmitOrder, OrderCompleted, OrderFaulted>
@@ -112,6 +113,12 @@ namespace ForkJoint.Application.Components.Futures
         public OrderFutureDefinition()
         {
             ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
+        }
+
+        protected override void ConfigureSaga(IReceiveEndpointConfigurator endpointConfigurator, ISagaConfigurator<FutureState> sagaConfigurator)
+        {
+            endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 1000, 5000));
+            endpointConfigurator.UseInMemoryOutbox();
         }
     }
 }

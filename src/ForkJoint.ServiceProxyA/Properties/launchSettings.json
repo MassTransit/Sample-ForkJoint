@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "ForkJoint.ServiceProxyA": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\Derek\\source\\repos\\_Mass_Transit\\MassTransit_YouTube_Projects\\S3\\Sample-ForkJoint\\src\\ForkJoint.Service\\bin\\Debug\\net5.0\\ForkJoint.Service.exe",
+      "workingDirectory": "C:\\Users\\Derek\\source\\repos\\_Mass_Transit\\MassTransit_YouTube_Projects\\S3\\Sample-ForkJoint\\src\\ForkJoint.Service\\bin\\Debug\\net5.0"
+    }
+  }
+}

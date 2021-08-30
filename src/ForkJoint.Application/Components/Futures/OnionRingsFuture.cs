@@ -1,6 +1,8 @@
 namespace ForkJoint.Application.Components.Futures
 {
     using Contracts;
+    using GreenPipes;
+    using MassTransit;
     using MassTransit.Futures;
     using MassTransit.Registration;
 
@@ -24,6 +26,12 @@ namespace ForkJoint.Application.Components.Futures
         public OnionRingsFutureDefinition()
         {
             ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
+        }
+
+        protected override void ConfigureSaga(IReceiveEndpointConfigurator endpointConfigurator, ISagaConfigurator<FutureState> sagaConfigurator)
+        {
+            endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 1000, 5000));
+            endpointConfigurator.UseInMemoryOutbox();
         }
     }
 }
