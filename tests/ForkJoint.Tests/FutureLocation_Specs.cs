@@ -5,7 +5,6 @@ namespace ForkJoint.Tests
     using MassTransit.Futures;
     using NUnit.Framework;
 
-
     [TestFixture]
     public class FutureLocation_Specs
     {

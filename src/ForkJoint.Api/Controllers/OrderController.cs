@@ -1,13 +1,12 @@
 ﻿namespace ForkJoint.Api.Controllers
 {
-    using System.Linq;
-    using System.Threading.Tasks;
     using Contracts;
+    using ForkJoint.Application.Models;
     using MassTransit;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Models;
-
+    using System.Linq;
+    using System.Threading.Tasks;
 
     [ApiController]
     [Route("[controller]")]

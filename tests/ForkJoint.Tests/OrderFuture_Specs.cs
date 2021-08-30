@@ -1,18 +1,17 @@
 namespace ForkJoint.Tests
 {
-    using System.Threading.Tasks;
-    using Api.Components.Activities;
-    using Api.Components.Consumers;
-    using Api.Components.Futures;
-    using Api.Components.ItineraryPlanners;
-    using Api.Services;
     using Contracts;
+    using ForkJoint.Application.Components.Activities;
+    using ForkJoint.Application.Components.Consumers;
+    using ForkJoint.Application.Components.Futures;
+    using ForkJoint.Application.Components.ItineraryPlanners;
+    using ForkJoint.Application.Services;
     using MassTransit;
     using MassTransit.ExtensionsDependencyInjectionIntegration;
     using MassTransit.Futures;
     using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
-
+    using System.Threading.Tasks;
 
     [TestFixture]
     public class OrderFuture_Specs :

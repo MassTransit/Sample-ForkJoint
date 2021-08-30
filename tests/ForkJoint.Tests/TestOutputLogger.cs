@@ -1,9 +1,8 @@
 namespace ForkJoint.Tests
 {
-    using System;
     using Microsoft.Extensions.Logging;
     using NUnit.Framework.Internal;
-
+    using System;
 
     public class TestOutputLogger :
         Microsoft.Extensions.Logging.ILogger

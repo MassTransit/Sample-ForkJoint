@@ -5,7 +5,6 @@ namespace ForkJoint.Api
     using Serilog;
     using Serilog.Events;
 
-
     public class Program
     {
         public static void Main(string[] args)

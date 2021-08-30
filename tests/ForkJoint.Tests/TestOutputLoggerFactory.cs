@@ -3,7 +3,6 @@ namespace ForkJoint.Tests
     using Microsoft.Extensions.Logging;
     using NUnit.Framework.Internal;
 
-
     public class TestOutputLoggerFactory :
         ILoggerFactory
     {

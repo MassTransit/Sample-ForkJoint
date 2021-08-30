@@ -11,7 +11,6 @@ namespace ForkJoint.Tests
     using Microsoft.Extensions.Logging;
     using NUnit.Framework;
 
-
     public class FutureTestFixture
     {
         protected ServiceProvider Provider;

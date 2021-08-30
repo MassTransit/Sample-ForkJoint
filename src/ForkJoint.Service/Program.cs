@@ -1,28 +1,26 @@
-using MassTransit;
-using Microsoft.Extensions.Hosting;
-using Serilog.Events;
-using Serilog;
-using System;
-using ForkJoint.Api.Components.Activities;
-using ForkJoint.Api.Components.Consumers;
-using ForkJoint.Api.Components.Futures;
-using ForkJoint.Api.Components.ItineraryPlanners;
-using ForkJoint.Api.Components;
-using ForkJoint.Api.Services;
-using ForkJoint.Api;
-using ForkJoint.Contracts;
-using MassTransit.EntityFrameworkCoreIntegration;
-using MassTransit.Futures;
-using Microsoft.ApplicationInsights.DependencyCollector;
-using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.EntityFrameworkCore;
-
 namespace ForkJoint.Service
 {
+    using ForkJoint.Application;
+    using ForkJoint.Application.Components;
+    using ForkJoint.Application.Components.Activities;
+    using ForkJoint.Application.Components.Consumers;
+    using ForkJoint.Application.Components.Futures;
+    using ForkJoint.Application.Components.ItineraryPlanners;
+    using ForkJoint.Application.Services;
+    using ForkJoint.Contracts;
+    using MassTransit;
+    using MassTransit.EntityFrameworkCoreIntegration;
+    using MassTransit.Futures;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Microsoft.Extensions.Hosting;
+    using Serilog;
+    using Serilog.Events;
+    using System;
+    using System.Reflection;
+
     public class Program
     {
         static bool? _isRunningInContainer;
