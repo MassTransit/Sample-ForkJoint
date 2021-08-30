@@ -33,7 +33,7 @@ namespace ForkJoint.Application.Components.Consumers
     {
         public CookFryConsumerDefinition()
         {
-            ConcurrentMessageLimit = 32;
+            ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
         }
     }
 }

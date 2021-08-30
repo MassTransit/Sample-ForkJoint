@@ -111,7 +111,7 @@ namespace ForkJoint.Application.Components.Futures
     {
         public OrderFutureDefinition()
         {
-            ConcurrentMessageLimit = 32;
+            ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
         }
     }
 }

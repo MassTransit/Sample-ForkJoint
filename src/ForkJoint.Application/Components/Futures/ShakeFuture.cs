@@ -21,7 +21,7 @@ namespace ForkJoint.Application.Components.Futures
     {
         public ShakeFutureDefinition()
         {
-            ConcurrentMessageLimit = 32;
+            ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
         }
     }
 }

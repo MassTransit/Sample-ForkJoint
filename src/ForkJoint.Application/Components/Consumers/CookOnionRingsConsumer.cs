@@ -33,7 +33,7 @@ namespace ForkJoint.Application.Components.Consumers
     {
         public CookOnionRingsConsumerDefinition()
         {
-            ConcurrentMessageLimit = 32;
+            ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
         }
     }
 }

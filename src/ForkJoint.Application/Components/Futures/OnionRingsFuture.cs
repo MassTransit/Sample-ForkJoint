@@ -23,7 +23,7 @@ namespace ForkJoint.Application.Components.Futures
     {
         public OnionRingsFutureDefinition()
         {
-            ConcurrentMessageLimit = 32;
+            ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
         }
     }
 }

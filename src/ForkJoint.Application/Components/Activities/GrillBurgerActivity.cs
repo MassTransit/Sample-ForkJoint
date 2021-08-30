@@ -41,7 +41,7 @@ namespace ForkJoint.Application.Components.Activities
     {
         public GrillBurgerActivityefinition()
         {
-            ConcurrentMessageLimit = 32;
+            ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
         }
     }
 }

@@ -31,7 +31,7 @@ namespace ForkJoint.Application.Components.Futures
     {
         public BurgerFutureDefinition()
         {
-            ConcurrentMessageLimit = 32;
+            ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
         }
     }
 }

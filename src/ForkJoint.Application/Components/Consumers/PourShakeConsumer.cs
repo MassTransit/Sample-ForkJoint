@@ -35,7 +35,7 @@ namespace ForkJoint.Application.Components.Consumers
     {
         public PourShakeConsumerDefinition()
         {
-            ConcurrentMessageLimit = 32;
+            ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
         }
     }
 }

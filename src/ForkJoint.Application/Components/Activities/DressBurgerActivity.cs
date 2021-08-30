@@ -70,7 +70,7 @@ namespace ForkJoint.Application.Components.Activities
     {
         public DressBurgerActivityDefinition()
         {
-            ConcurrentMessageLimit = 32;
+            ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
         }
     }
 }

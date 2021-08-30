@@ -59,7 +59,7 @@ namespace ForkJoint.Application.Components.Futures
     {
         public FryShakeFutureDefinition()
         {
-            ConcurrentMessageLimit = 32;
+            ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
         }
     }
 }

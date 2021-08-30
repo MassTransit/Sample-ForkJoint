@@ -58,7 +58,7 @@ namespace ForkJoint.Application.Components.Futures
     {
         public ComboFutureDefinition()
         {
-            ConcurrentMessageLimit = 32;
+            ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
         }
     }
 }
