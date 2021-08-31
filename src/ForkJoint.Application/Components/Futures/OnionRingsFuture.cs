@@ -2,6 +2,7 @@ namespace ForkJoint.Application.Components.Futures
 {
     using Contracts;
     using GreenPipes;
+using GreenPipes.Partitioning;
     using MassTransit;
     using MassTransit.Futures;
     using MassTransit.Registration;
@@ -17,7 +18,7 @@ namespace ForkJoint.Application.Components.Futures
             SendRequest<CookOnionRings>()
                 .OnResponseReceived<OnionRingsReady>(x =>
                 {
-                    x.SetCompletedUsingInitializer(context => new {Description = $"{context.Message.Quantity} Onion Rings"});
+                    x.SetCompletedUsingInitializer(context => new { Description = $"{context.Message.Quantity} Onion Rings" });
                 });
         }
     }
@@ -36,6 +37,13 @@ namespace ForkJoint.Application.Components.Futures
             endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 15000, 60000));
 
             endpointConfigurator.UseInMemoryOutbox();
+
+            var partitionCount = ConcurrentMessageLimit ?? Environment.ProcessorCount * 4;
+
+            IPartitioner partitioner = new Partitioner(partitionCount, new Murmur3UnsafeHashGenerator());
+
+            endpointConfigurator.UsePartitioner<OrderOnionRings>(partitioner, x => x.Message.OrderLineId);
+            endpointConfigurator.UsePartitioner<OnionRingsCompleted>(partitioner, x => x.Message.OrderLineId);
         }
     }
 }
