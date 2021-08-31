@@ -1,6 +1,8 @@
 namespace ForkJoint.Application.Components.Activities
 {
     using ForkJoint.Application.Services;
+    using GreenPipes;
+    using MassTransit;
     using MassTransit.Courier;
     using MassTransit.Definition;
     using Microsoft.Extensions.Logging;
@@ -42,6 +44,12 @@ namespace ForkJoint.Application.Components.Activities
         public GrillBurgerActivityefinition()
         {
             ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
+        }
+
+        protected override void ConfigureExecuteActivity(IReceiveEndpointConfigurator endpointConfigurator, IExecuteActivityConfigurator<GrillBurgerActivity, GrillBurgerArguments> executeActivityConfigurator)
+        {
+            endpointConfigurator.UseMessageRetry(cfg => cfg.Immediate(5));
+            endpointConfigurator.UseInMemoryOutbox();
         }
     }
 }

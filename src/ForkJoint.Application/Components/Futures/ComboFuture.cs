@@ -1,10 +1,11 @@
 namespace ForkJoint.Application.Components.Futures
 {
-    using System.Linq;
     using Contracts;
+    using GreenPipes;
     using MassTransit;
     using MassTransit.Futures;
     using MassTransit.Registration;
+    using System.Linq;
 
     public class ComboFuture :
         Future<OrderCombo, ComboCompleted>
@@ -48,7 +49,7 @@ namespace ForkJoint.Application.Components.Futures
                     var fryCompleted = context.SelectResults<FryCompleted>().FirstOrDefault();
                     var shakeCompleted = context.SelectResults<ShakeCompleted>().FirstOrDefault();
 
-                    return new {Description = $"Combo ({fryCompleted.Description}, {shakeCompleted.Description})"};
+                    return new { Description = $"Combo ({fryCompleted.Description}, {shakeCompleted.Description})" };
                 });
             });
         }
@@ -59,6 +60,12 @@ namespace ForkJoint.Application.Components.Futures
         public ComboFutureDefinition()
         {
             ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
+        }
+
+        protected override void ConfigureSaga(IReceiveEndpointConfigurator endpointConfigurator, ISagaConfigurator<FutureState> sagaConfigurator)
+        {
+            endpointConfigurator.UseMessageRetry(cfg => cfg.Immediate(5));
+            endpointConfigurator.UseInMemoryOutbox();
         }
     }
 }

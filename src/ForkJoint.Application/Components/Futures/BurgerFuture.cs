@@ -38,7 +38,7 @@ namespace ForkJoint.Application.Components.Futures
 
         protected override void ConfigureSaga(IReceiveEndpointConfigurator endpointConfigurator, ISagaConfigurator<FutureState> sagaConfigurator)
         {
-            endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 1000, 5000));
+            endpointConfigurator.UseMessageRetry(cfg => cfg.Immediate(5));
             endpointConfigurator.UseInMemoryOutbox();
         }
     }

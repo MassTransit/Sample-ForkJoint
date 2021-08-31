@@ -1,12 +1,13 @@
 namespace ForkJoint.Application.Components.Activities
 {
-    using System;
-    using System.Threading.Tasks;
     using Contracts;
+    using GreenPipes;
     using MassTransit;
     using MassTransit.Courier;
     using MassTransit.Definition;
     using Microsoft.Extensions.Logging;
+    using System;
+    using System.Threading.Tasks;
 
     public class DressBurgerActivity :
         IExecuteActivity<DressBurgerArguments>
@@ -71,6 +72,12 @@ namespace ForkJoint.Application.Components.Activities
         public DressBurgerActivityDefinition()
         {
             ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
+        }
+
+        protected override void ConfigureExecuteActivity(IReceiveEndpointConfigurator endpointConfigurator, IExecuteActivityConfigurator<DressBurgerActivity, DressBurgerArguments> executeActivityConfigurator)
+        {
+            endpointConfigurator.UseMessageRetry(cfg => cfg.Immediate(5));
+            endpointConfigurator.UseInMemoryOutbox();
         }
     }
 }

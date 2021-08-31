@@ -1,10 +1,12 @@
 namespace ForkJoint.Application.Components.Consumers
 {
-    using System.Threading.Tasks;
     using Contracts;
     using ForkJoint.Application.Services;
+    using GreenPipes;
     using MassTransit;
+    using MassTransit.ConsumeConfigurators;
     using MassTransit.Definition;
+    using System.Threading.Tasks;
 
     public class CookOnionRingsConsumer :
         IConsumer<CookOnionRings>
@@ -34,6 +36,12 @@ namespace ForkJoint.Application.Components.Consumers
         public CookOnionRingsConsumerDefinition()
         {
             ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
+        }
+
+        protected override void ConfigureConsumer(IReceiveEndpointConfigurator endpointConfigurator, IConsumerConfigurator<CookOnionRingsConsumer> consumerConfigurator)
+        {
+            endpointConfigurator.UseMessageRetry(cfg => cfg.Immediate(5));
+            endpointConfigurator.UseInMemoryOutbox();
         }
     }
 }

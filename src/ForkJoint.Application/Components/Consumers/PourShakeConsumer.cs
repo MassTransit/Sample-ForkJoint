@@ -2,7 +2,9 @@ namespace ForkJoint.Application.Components.Consumers
 {
     using Contracts;
     using ForkJoint.Application.Services;
+    using GreenPipes;
     using MassTransit;
+    using MassTransit.ConsumeConfigurators;
     using MassTransit.Definition;
     using System.Threading.Tasks;
 
@@ -36,6 +38,12 @@ namespace ForkJoint.Application.Components.Consumers
         public PourShakeConsumerDefinition()
         {
             ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
+        }
+
+        protected override void ConfigureConsumer(IReceiveEndpointConfigurator endpointConfigurator, IConsumerConfigurator<PourShakeConsumer> consumerConfigurator)
+        {
+            endpointConfigurator.UseMessageRetry(cfg => cfg.Immediate(5));
+            endpointConfigurator.UseInMemoryOutbox();
         }
     }
 }
