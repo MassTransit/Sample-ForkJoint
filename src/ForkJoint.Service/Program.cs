@@ -82,6 +82,7 @@ namespace ForkJoint.Service
                         x.SetEntityFrameworkSagaRepositoryProvider(r =>
                         {
                             r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
+                            
                             r.LockStatementProvider = new SqlServerLockStatementProvider();
 
                             r.ExistingDbContext<ForkJointSagaDbContext>();
@@ -97,6 +98,7 @@ namespace ForkJoint.Service
                             .EntityFrameworkRepository(r =>
                             {
                                 r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
+
                                 r.LockStatementProvider = new SqlServerLockStatementProvider();
 
                                 r.ExistingDbContext<ForkJointSagaDbContext>();

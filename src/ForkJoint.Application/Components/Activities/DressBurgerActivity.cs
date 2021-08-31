@@ -71,12 +71,15 @@ namespace ForkJoint.Application.Components.Activities
     {
         public DressBurgerActivityDefinition()
         {
-            ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
+            //ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
+
+            ConcurrentMessageLimit = Environment.ProcessorCount * 4;
         }
 
         protected override void ConfigureExecuteActivity(IReceiveEndpointConfigurator endpointConfigurator, IExecuteActivityConfigurator<DressBurgerActivity, DressBurgerArguments> executeActivityConfigurator)
         {
-            endpointConfigurator.UseMessageRetry(cfg => cfg.Immediate(5));
+            endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 15000, 60000));
+
             endpointConfigurator.UseInMemoryOutbox();
         }
     }

@@ -6,6 +6,7 @@ namespace ForkJoint.Application.Components.Activities
     using MassTransit.Courier;
     using MassTransit.Definition;
     using Microsoft.Extensions.Logging;
+    using System;
     using System.Threading.Tasks;
 
     public class GrillBurgerActivity :
@@ -43,12 +44,15 @@ namespace ForkJoint.Application.Components.Activities
     {
         public GrillBurgerActivityefinition()
         {
-            ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
+            //ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
+
+            ConcurrentMessageLimit = Environment.ProcessorCount * 4;
         }
 
         protected override void ConfigureExecuteActivity(IReceiveEndpointConfigurator endpointConfigurator, IExecuteActivityConfigurator<GrillBurgerActivity, GrillBurgerArguments> executeActivityConfigurator)
         {
-            endpointConfigurator.UseMessageRetry(cfg => cfg.Immediate(5));
+            endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 15000, 60000));
+
             endpointConfigurator.UseInMemoryOutbox();
         }
     }

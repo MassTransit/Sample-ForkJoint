@@ -113,21 +113,24 @@ namespace ForkJoint.Application.Components.Futures
     {
         public OrderFutureDefinition()
         {
-            ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
+            //ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
+
+            ConcurrentMessageLimit = Environment.ProcessorCount * 4;
         }
 
         protected override void ConfigureSaga(IReceiveEndpointConfigurator endpointConfigurator, ISagaConfigurator<FutureState> sagaConfigurator)
         {
-            endpointConfigurator.UseMessageRetry(cfg => cfg.Immediate(5));
+            endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 15000, 60000));
+
             endpointConfigurator.UseInMemoryOutbox();
 
-            //var partitionCount = ConcurrentMessageLimit ?? Environment.ProcessorCount * 4;
+            var partitionCount = ConcurrentMessageLimit ?? Environment.ProcessorCount * 4;
 
-            //IPartitioner partitioner = new Partitioner(partitionCount, new Murmur3UnsafeHashGenerator());
+            IPartitioner partitioner = new Partitioner(partitionCount, new Murmur3UnsafeHashGenerator());
 
-            //endpointConfigurator.UsePartitioner<SubmitOrder>(partitioner, x => x.Message.OrderId);
-            //endpointConfigurator.UsePartitioner<OrderCompleted>(partitioner, x => x.Message.OrderId);
-            //endpointConfigurator.UsePartitioner<OrderFaulted>(partitioner, x => x.Message.OrderId);
+            endpointConfigurator.UsePartitioner<SubmitOrder>(partitioner, x => x.Message.OrderId);
+            endpointConfigurator.UsePartitioner<OrderCompleted>(partitioner, x => x.Message.OrderId);
+            endpointConfigurator.UsePartitioner<OrderFaulted>(partitioner, x => x.Message.OrderId);
         }
     }
 }
