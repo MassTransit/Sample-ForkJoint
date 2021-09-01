@@ -6,6 +6,7 @@ namespace ForkJoint.Application.Components.Consumers
     using MassTransit;
     using MassTransit.ConsumeConfigurators;
     using MassTransit.Definition;
+using MassTransit.RabbitMqTransport;
     using System;
     using System.Threading.Tasks;
 
@@ -36,13 +37,21 @@ namespace ForkJoint.Application.Components.Consumers
     {
         public CookOnionRingsConsumerDefinition()
         {
-            //ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
-
-            ConcurrentMessageLimit = Environment.ProcessorCount * 4;
+            ConcurrentMessageLimit = GlobalValues.ConcurrentMessageLimit ?? Environment.ProcessorCount * 4;
         }
 
         protected override void ConfigureConsumer(IReceiveEndpointConfigurator endpointConfigurator, IConsumerConfigurator<CookOnionRingsConsumer> consumerConfigurator)
         {
+            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator && GlobalValues.UseLazyQueues)
+            {
+                ((IRabbitMqReceiveEndpointConfigurator)endpointConfigurator).Lazy = GlobalValues.UseLazyQueues;
+            }
+
+            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator && GlobalValues.PrefetchCount != null)
+            {
+                ((IRabbitMqReceiveEndpointConfigurator)endpointConfigurator).PrefetchCount = (int)GlobalValues.PrefetchCount;
+            }
+
             endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 15000, 60000));
 
             endpointConfigurator.UseInMemoryOutbox();

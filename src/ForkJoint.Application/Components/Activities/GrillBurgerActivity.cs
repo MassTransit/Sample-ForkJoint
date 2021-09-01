@@ -2,9 +2,12 @@ namespace ForkJoint.Application.Components.Activities
 {
     using ForkJoint.Application.Services;
     using GreenPipes;
+    using GreenPipes.Partitioning;
     using MassTransit;
     using MassTransit.Courier;
+    using MassTransit.Courier.Contracts;
     using MassTransit.Definition;
+using MassTransit.RabbitMqTransport;
     using Microsoft.Extensions.Logging;
     using System;
     using System.Threading.Tasks;
@@ -44,16 +47,30 @@ namespace ForkJoint.Application.Components.Activities
     {
         public GrillBurgerActivityefinition()
         {
-            //ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
-
-            ConcurrentMessageLimit = Environment.ProcessorCount * 4;
+            ConcurrentMessageLimit = GlobalValues.ConcurrentMessageLimit ?? Environment.ProcessorCount * 4;
         }
 
         protected override void ConfigureExecuteActivity(IReceiveEndpointConfigurator endpointConfigurator, IExecuteActivityConfigurator<GrillBurgerActivity, GrillBurgerArguments> executeActivityConfigurator)
         {
+            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator && GlobalValues.UseLazyQueues)
+            {
+                ((IRabbitMqReceiveEndpointConfigurator)endpointConfigurator).Lazy = GlobalValues.UseLazyQueues;
+            }
+
+            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator && GlobalValues.PrefetchCount != null)
+            {
+                ((IRabbitMqReceiveEndpointConfigurator)endpointConfigurator).PrefetchCount = (int)GlobalValues.PrefetchCount;
+            }
+
             endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 15000, 60000));
 
             endpointConfigurator.UseInMemoryOutbox();
+
+            //var partitionCount = ConcurrentMessageLimit ?? Environment.ProcessorCount * 4;
+
+            //IPartitioner partitioner = new Partitioner(partitionCount, new Murmur3UnsafeHashGenerator());
+
+            //endpointConfigurator.UsePartitioner<RoutingSlip>(partitioner, x => x.Message.TrackingNumber);
         }
     }
 }

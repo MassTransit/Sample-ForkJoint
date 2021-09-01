@@ -2,9 +2,12 @@ namespace ForkJoint.Application.Components.Futures
 {
     using Contracts;
     using GreenPipes;
+    using GreenPipes.Partitioning;
     using MassTransit;
     using MassTransit.Courier;
+    using MassTransit.Courier.Contracts;
     using MassTransit.Futures;
+    using MassTransit.RabbitMqTransport;
     using MassTransit.Registration;
     using System;
 
@@ -34,16 +37,32 @@ namespace ForkJoint.Application.Components.Futures
     {
         public BurgerFutureDefinition()
         {
-            //ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
-
-            ConcurrentMessageLimit = Environment.ProcessorCount * 4;
+            ConcurrentMessageLimit = GlobalValues.ConcurrentMessageLimit ?? Environment.ProcessorCount * 4;
         }
 
         protected override void ConfigureSaga(IReceiveEndpointConfigurator endpointConfigurator, ISagaConfigurator<FutureState> sagaConfigurator)
         {
+            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator && GlobalValues.UseLazyQueues)
+            {
+                ((IRabbitMqReceiveEndpointConfigurator)endpointConfigurator).Lazy = GlobalValues.UseLazyQueues;
+            }
+
+            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator && GlobalValues.PrefetchCount != null)
+            {
+                ((IRabbitMqReceiveEndpointConfigurator)endpointConfigurator).PrefetchCount = (int)GlobalValues.PrefetchCount;
+            }
+
             endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 15000, 60000));
 
             endpointConfigurator.UseInMemoryOutbox();
+
+            //var partitionCount = ConcurrentMessageLimit ?? Environment.ProcessorCount * 4;
+
+            //IPartitioner partitioner = new Partitioner(partitionCount, new Murmur3UnsafeHashGenerator());
+
+            //endpointConfigurator.UsePartitioner<OrderBurger>(partitioner, x => x.Message.OrderLineId);
+            //endpointConfigurator.UsePartitioner<BurgerCompleted>(partitioner, x => x.Message.OrderLineId);
+            //endpointConfigurator.UsePartitioner<RoutingSlipCompleted>(partitioner, x => x.Message.TrackingNumber);
         }
     }
 }

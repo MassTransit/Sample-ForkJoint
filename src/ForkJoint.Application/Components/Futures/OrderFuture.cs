@@ -5,6 +5,7 @@ namespace ForkJoint.Application.Components.Futures
     using GreenPipes.Partitioning;
     using MassTransit;
     using MassTransit.Futures;
+    using MassTransit.RabbitMqTransport;
     using MassTransit.Registration;
     using System;
     using System.Collections.Generic;
@@ -113,13 +114,21 @@ namespace ForkJoint.Application.Components.Futures
     {
         public OrderFutureDefinition()
         {
-            //ConcurrentMessageLimit = ConcurrentMessageLimits.GlobalValue;
-
-            ConcurrentMessageLimit = Environment.ProcessorCount * 4;
+            ConcurrentMessageLimit = GlobalValues.ConcurrentMessageLimit ?? Environment.ProcessorCount * 4;
         }
 
         protected override void ConfigureSaga(IReceiveEndpointConfigurator endpointConfigurator, ISagaConfigurator<FutureState> sagaConfigurator)
         {
+            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator && GlobalValues.UseLazyQueues)
+            {
+                ((IRabbitMqReceiveEndpointConfigurator)endpointConfigurator).Lazy = GlobalValues.UseLazyQueues;
+            }
+
+            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator && GlobalValues.PrefetchCount != null)
+            {
+                ((IRabbitMqReceiveEndpointConfigurator)endpointConfigurator).PrefetchCount = (int)GlobalValues.PrefetchCount;
+            }
+
             endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 15000, 60000));
 
             endpointConfigurator.UseInMemoryOutbox();

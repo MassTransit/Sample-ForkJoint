@@ -36,7 +36,8 @@ namespace ForkJoint.Application.Components.ItineraryPlanners
             });
 
             Guid? onionRingId = default;
-            if (burger.OnionRing)
+
+            if (burger.OnionRing && GlobalValues.PreOrderOnionRings)
             {
                 onionRingId = NewId.NextGuid();
 
