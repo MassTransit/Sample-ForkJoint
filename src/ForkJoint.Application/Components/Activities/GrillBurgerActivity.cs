@@ -52,17 +52,48 @@ using MassTransit.RabbitMqTransport;
 
         protected override void ConfigureExecuteActivity(IReceiveEndpointConfigurator endpointConfigurator, IExecuteActivityConfigurator<GrillBurgerActivity, GrillBurgerArguments> executeActivityConfigurator)
         {
-            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator && GlobalValues.UseLazyQueues)
+            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator)
             {
-                ((IRabbitMqReceiveEndpointConfigurator)endpointConfigurator).Lazy = GlobalValues.UseLazyQueues;
+                var rabbitMqReceiveEndpointConfigurator = (IRabbitMqReceiveEndpointConfigurator)endpointConfigurator;
+
+                if (GlobalValues.PrefetchCount != null)
+                    rabbitMqReceiveEndpointConfigurator.PrefetchCount = (int)GlobalValues.PrefetchCount;
+
+                if (GlobalValues.UseQuorumQueues)
+                    rabbitMqReceiveEndpointConfigurator.SetQuorumQueue();
+
+                if (GlobalValues.UseLazyQueues && !GlobalValues.UseQuorumQueues)
+                    rabbitMqReceiveEndpointConfigurator.Lazy = GlobalValues.UseLazyQueues;
             }
 
-            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator && GlobalValues.PrefetchCount != null)
+            endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 15000, 60000, 120000));
+
+            endpointConfigurator.UseInMemoryOutbox();
+
+            //var partitionCount = ConcurrentMessageLimit ?? Environment.ProcessorCount * 4;
+
+            //IPartitioner partitioner = new Partitioner(partitionCount, new Murmur3UnsafeHashGenerator());
+
+            //endpointConfigurator.UsePartitioner<RoutingSlip>(partitioner, x => x.Message.TrackingNumber);
+        }
+
+        protected override void ConfigureCompensateActivity(IReceiveEndpointConfigurator endpointConfigurator, ICompensateActivityConfigurator<GrillBurgerActivity, GrillBurgerLog> compensateActivityConfigurator)
+        {
+            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator)
             {
-                ((IRabbitMqReceiveEndpointConfigurator)endpointConfigurator).PrefetchCount = (int)GlobalValues.PrefetchCount;
+                var rabbitMqReceiveEndpointConfigurator = (IRabbitMqReceiveEndpointConfigurator)endpointConfigurator;
+
+                if (GlobalValues.PrefetchCount != null)
+                    rabbitMqReceiveEndpointConfigurator.PrefetchCount = (int)GlobalValues.PrefetchCount;
+
+                if (GlobalValues.UseQuorumQueues)
+                    rabbitMqReceiveEndpointConfigurator.SetQuorumQueue();
+
+                if (GlobalValues.UseLazyQueues && !GlobalValues.UseQuorumQueues)
+                    rabbitMqReceiveEndpointConfigurator.Lazy = GlobalValues.UseLazyQueues;
             }
 
-            endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 15000, 60000));
+            endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 15000, 60000, 120000));
 
             endpointConfigurator.UseInMemoryOutbox();
 

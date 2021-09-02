@@ -9,5 +9,7 @@
         public readonly static bool UseLazyQueues = true;
 
         public readonly static bool PreOrderOnionRings = true;
+
+        public readonly static bool UseQuorumQueues = true;
     }
 }

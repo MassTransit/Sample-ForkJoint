@@ -119,17 +119,21 @@ namespace ForkJoint.Application.Components.Futures
 
         protected override void ConfigureSaga(IReceiveEndpointConfigurator endpointConfigurator, ISagaConfigurator<FutureState> sagaConfigurator)
         {
-            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator && GlobalValues.UseLazyQueues)
+            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator)
             {
-                ((IRabbitMqReceiveEndpointConfigurator)endpointConfigurator).Lazy = GlobalValues.UseLazyQueues;
+                var rabbitMqReceiveEndpointConfigurator = (IRabbitMqReceiveEndpointConfigurator)endpointConfigurator;
+
+                if (GlobalValues.PrefetchCount != null)
+                    rabbitMqReceiveEndpointConfigurator.PrefetchCount = (int)GlobalValues.PrefetchCount;
+
+                if (GlobalValues.UseQuorumQueues)
+                    rabbitMqReceiveEndpointConfigurator.SetQuorumQueue();
+
+                if (GlobalValues.UseLazyQueues && !GlobalValues.UseQuorumQueues)
+                    rabbitMqReceiveEndpointConfigurator.Lazy = GlobalValues.UseLazyQueues;
             }
 
-            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator && GlobalValues.PrefetchCount != null)
-            {
-                ((IRabbitMqReceiveEndpointConfigurator)endpointConfigurator).PrefetchCount = (int)GlobalValues.PrefetchCount;
-            }
-
-            endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 15000, 60000));
+            endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 15000, 60000, 120000));
 
             endpointConfigurator.UseInMemoryOutbox();
 
