@@ -4,7 +4,7 @@ namespace ForkJoint.Application.Components.Futures
     using GreenPipes;
     using MassTransit;
     using MassTransit.Futures;
-using MassTransit.RabbitMqTransport;
+    using MassTransit.RabbitMqTransport;
     using MassTransit.Registration;
     using System;
 
@@ -16,37 +16,61 @@ using MassTransit.RabbitMqTransport;
             ConfigureCommand(x => x.CorrelateById(context => context.Message.OrderLineId));
 
             SendRequest<OrderFry>(x =>
+            {
+                x.UsingRequestInitializer(context =>
                 {
-                    x.UsingRequestInitializer(context => new
-                    {
-                        OrderId = context.Instance.CorrelationId,
-                        OrderLineId = InVar.Id,
-                        context.Message.Size,
-                    });
+                    context.Instance.Variables.TryGetValue("fryOrderLineId", out Guid? fryOrderLineId);
 
-                    x.TrackPendingRequest(message => message.OrderLineId);
-                })
-                .OnResponseReceived<FryCompleted>(x =>
-                {
-                    x.CompletePendingRequest(message => message.OrderLineId);
+                    if (fryOrderLineId == null)
+                    {
+                        fryOrderLineId = NewId.NextGuid();
+
+                        context.Instance.Variables.Add("fryOrderLineId", fryOrderLineId);
+                    }
+
+                    return new
+                    {
+                        OrderId = context.Message.OrderLineId,
+                        OrderLineId = fryOrderLineId,
+                        context.Message.Size,
+                    };
                 });
+
+                x.TrackPendingRequest(message => message.OrderLineId);
+
+            }).OnResponseReceived<FryCompleted>(x =>
+            {
+                x.CompletePendingRequest(message => message.OrderLineId);
+            });
 
             SendRequest<OrderShake>(x =>
+            {
+                x.UsingRequestInitializer(context =>
                 {
-                    x.UsingRequestInitializer(context => new
+                    context.Instance.Variables.TryGetValue("shakeOrderLineId", out Guid? shakeOrderLineId);
+
+                    if (shakeOrderLineId == null)
                     {
-                        OrderId = context.Instance.CorrelationId,
-                        OrderLineId = InVar.Id,
+                        shakeOrderLineId = NewId.NextGuid();
+
+                        context.Instance.Variables.Add("shakeOrderLineId", shakeOrderLineId);
+                    }
+
+                    return new
+                    {
+                        OrderId = context.Message.OrderLineId,
+                        OrderLineId = shakeOrderLineId,
                         context.Message.Flavor,
                         context.Message.Size,
-                    });
-
-                    x.TrackPendingRequest(message => message.OrderLineId);
-                })
-                .OnResponseReceived<ShakeCompleted>(x =>
-                {
-                    x.CompletePendingRequest(message => message.OrderLineId);
+                    };
                 });
+
+                x.TrackPendingRequest(message => message.OrderLineId);
+
+            }).OnResponseReceived<ShakeCompleted>(x =>
+            {
+                x.CompletePendingRequest(message => message.OrderLineId);
+            });
 
 
             WhenAllCompleted(x => x.SetCompletedUsingInitializer(context =>
