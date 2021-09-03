@@ -61,7 +61,7 @@ namespace ForkJoint.Service
                     services.TryAddSingleton<IGrill, Grill>();
                     services.TryAddSingleton<IFryer, Fryer>();
                     services.TryAddSingleton<IShakeMachine, ShakeMachine>();
-                    
+
                     AddTelemetry(hostContext, services);
 
                     services.AddDbContext<ForkJointSagaDbContext>(builder =>
@@ -82,7 +82,7 @@ namespace ForkJoint.Service
                         x.SetEntityFrameworkSagaRepositoryProvider(r =>
                         {
                             r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
-                            
+
                             r.LockStatementProvider = new SqlServerLockStatementProvider();
 
                             r.ExistingDbContext<ForkJointSagaDbContext>();
@@ -95,6 +95,18 @@ namespace ForkJoint.Service
                         x.AddFuturesFromNamespaceContaining<OrderFuture>();
 
                         x.AddSagaRepository<FutureState>()
+                            .EntityFrameworkRepository(r =>
+                            {
+                                r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
+
+                                r.LockStatementProvider = new SqlServerLockStatementProvider();
+
+                                r.ExistingDbContext<ForkJointSagaDbContext>();
+                            });
+
+                        x.AddSagaStateMachine<OptimisticConcurrencyTestsStateMachine, OptimisticConcurrencyTestsState>();
+
+                        x.AddSagaRepository<OptimisticConcurrencyTestsState>()
                             .EntityFrameworkRepository(r =>
                             {
                                 r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
@@ -123,7 +135,7 @@ namespace ForkJoint.Service
                 })
                 .UseSerilog();
 
-        private static void AddTelemetry(HostBuilderContext hostBuilderContext,IServiceCollection services)
+        private static void AddTelemetry(HostBuilderContext hostBuilderContext, IServiceCollection services)
         {
             var instrumentationKey = hostBuilderContext.Configuration.GetSection("ApplicationInsights:InstrumentationKey").Value;
 

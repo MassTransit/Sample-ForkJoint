@@ -15,7 +15,11 @@ namespace ForkJoint.Application.Components
 
         protected override IEnumerable<ISagaClassMap> Configurations
         {
-            get { yield return new FutureStateMap(); }
+            get
+            {
+                yield return new FutureStateMap();
+                yield return new OptimisticConcurrencyTestsStateMap();
+            }
         }
     }
 }
