@@ -71,6 +71,13 @@ namespace ForkJoint.Service
                             m.MigrationsHistoryTable($"__{nameof(ForkJointSagaDbContext)}");
                         }));
 
+                    services.AddDbContext<ApplicationOptimisticFutureSagaDbContext>(builder =>
+                        builder.UseSqlServer(GetConnectionString(hostContext), m =>
+                        {
+                            m.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name);
+                            m.MigrationsHistoryTable($"__{nameof(ApplicationOptimisticFutureSagaDbContext)}");
+                        }));
+
                     services.AddGenericRequestClient();
 
                     services.AddMassTransit(x =>
@@ -97,11 +104,11 @@ namespace ForkJoint.Service
                         x.AddSagaRepository<FutureState>()
                             .EntityFrameworkRepository(r =>
                             {
-                                r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
+                                r.ConcurrencyMode = ConcurrencyMode.Optimistic;
 
-                                r.LockStatementProvider = new SqlServerLockStatementProvider();
+                                //r.LockStatementProvider = new SqlServerLockStatementProvider();
 
-                                r.ExistingDbContext<ForkJointSagaDbContext>();
+                                r.ExistingDbContext<ApplicationOptimisticFutureSagaDbContext>();
                             });
 
                         x.AddSagaStateMachine<OptimisticConcurrencyTestsStateMachine, OptimisticConcurrencyTestsState>();

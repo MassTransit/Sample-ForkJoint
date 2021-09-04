@@ -17,7 +17,6 @@ namespace ForkJoint.Application.Components
         {
             get
             {
-                yield return new FutureStateMap();
                 yield return new OptimisticConcurrencyTestsStateMap();
             }
         }

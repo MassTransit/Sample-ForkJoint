@@ -63,3 +63,6 @@ tools/**
 artifacts/**
 artifacts_old/**
 /src/.ionide
+
+# app specific
+/src/ForkJoint.Application/Migrations

@@ -58,7 +58,7 @@ using MassTransit.RabbitMqTransport;
                     rabbitMqReceiveEndpointConfigurator.Lazy = GlobalValues.UseLazyQueues;
             }
 
-            endpointConfigurator.UseMessageRetry(cfg => cfg.Intervals(500, 15000, 60000, 120000));
+            endpointConfigurator.UseMessageRetry(GlobalValues.RetryPolicy);
 
             endpointConfigurator.UseInMemoryOutbox();
         }

@@ -19,7 +19,7 @@
 
         public int Version { get; set; }
 
-        //public byte[] RowVersion { get; set; }
+        public byte[] RowVersion { get; set; }
 
         public Guid CorrelationId { get; set; }
     }
@@ -31,7 +31,7 @@
         {
             entity.Property(x => x.CurrentState);
 
-            //entity.Property(x => x.RowVersion).IsRowVersion();
+            entity.Property(x => x.RowVersion).IsRowVersion();
 
             entity.Property(x => x.Created);
             entity.Property(x => x.Completed);
@@ -75,21 +75,4 @@
     {
         public Guid Id { get; }
     }
-
-    //public class OptimisticConcurrencyTestsSagaDbContext :
-    //    SagaDbContext
-    //{
-    //    public OptimisticConcurrencyTestsSagaDbContext(DbContextOptions options)
-    //        : base(options)
-    //    {
-    //    }
-
-    //    protected override IEnumerable<ISagaClassMap> Configurations
-    //    {
-    //        get
-    //        {
-    //            yield return new OptimisticConcurrencyTestsStateMap();
-    //        }
-    //    }
-    //}
 }
