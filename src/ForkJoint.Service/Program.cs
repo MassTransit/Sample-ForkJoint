@@ -111,7 +111,7 @@ namespace ForkJoint.Service
                                 r.ExistingDbContext<ApplicationOptimisticFutureSagaDbContext>();
                             });
 
-                        x.AddSagaStateMachine<OptimisticConcurrencyTestsStateMachine, OptimisticConcurrencyTestsState>();
+                        x.AddSagaStateMachine<OptimisticConcurrencyTestsStateMachine, OptimisticConcurrencyTestsState>(typeof(OptimisticConcurrencyTestsSagaDefinition));
 
                         x.AddSagaRepository<OptimisticConcurrencyTestsState>()
                             .EntityFrameworkRepository(r =>

@@ -1,7 +1,10 @@
 ﻿namespace ForkJoint.Application.Components
 {
     using Automatonymous;
+    using MassTransit;
+    using MassTransit.Definition;
     using MassTransit.EntityFrameworkCoreIntegration.Mappings;
+    using MassTransit.RabbitMqTransport;
     using MassTransit.Saga;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -63,6 +66,35 @@
                 When(Update)
                     .Then(ctx => ctx.Instance.Completed = DateTime.UtcNow)
                 );
+        }
+    }
+
+    public class OptimisticConcurrencyTestsSagaDefinition : SagaDefinition<OptimisticConcurrencyTestsState>
+    {
+        public OptimisticConcurrencyTestsSagaDefinition()
+        {
+            ConcurrentMessageLimit = GlobalValues.ConcurrentMessageLimit ?? Environment.ProcessorCount * 4;
+        }
+
+        protected override void ConfigureSaga(IReceiveEndpointConfigurator endpointConfigurator, ISagaConfigurator<OptimisticConcurrencyTestsState> sagaConfigurator)
+        {
+            if (endpointConfigurator is IRabbitMqReceiveEndpointConfigurator)
+            {
+                var rabbitMqReceiveEndpointConfigurator = (IRabbitMqReceiveEndpointConfigurator)endpointConfigurator;
+
+                if (GlobalValues.PrefetchCount != null)
+                    rabbitMqReceiveEndpointConfigurator.PrefetchCount = (int)GlobalValues.PrefetchCount;
+
+                if (GlobalValues.UseQuorumQueues)
+                    rabbitMqReceiveEndpointConfigurator.SetQuorumQueue();
+
+                if (GlobalValues.UseLazyQueues && !GlobalValues.UseQuorumQueues)
+                    rabbitMqReceiveEndpointConfigurator.Lazy = GlobalValues.UseLazyQueues;
+            }
+
+            endpointConfigurator.UseMessageRetry(GlobalValues.RetryPolicy);
+
+            endpointConfigurator.UseInMemoryOutbox();
         }
     }
 
