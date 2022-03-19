@@ -1,7 +1,7 @@
 namespace ForkJoint.Api.Components.Futures
 {
     using Contracts;
-    using MassTransit.Futures;
+    using MassTransit;
 
 
     public class OnionRingsFuture :
@@ -14,7 +14,7 @@ namespace ForkJoint.Api.Components.Futures
             SendRequest<CookOnionRings>()
                 .OnResponseReceived<OnionRingsReady>(x =>
                 {
-                    x.SetCompletedUsingInitializer(context => new {Description = $"{context.Message.Quantity} Onion Rings"});
+                    x.SetCompletedUsingInitializer(context => new { Description = $"{context.Message.Quantity} Onion Rings" });
                 });
         }
     }

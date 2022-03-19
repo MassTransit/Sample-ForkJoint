@@ -2,7 +2,6 @@ namespace ForkJoint.Api.Components.Futures
 {
     using Contracts;
     using MassTransit;
-    using MassTransit.Futures;
 
 
     public class FryShakeFuture :
@@ -16,7 +15,7 @@ namespace ForkJoint.Api.Components.Futures
                 {
                     x.UsingRequestInitializer(context => new
                     {
-                        OrderId = context.Instance.CorrelationId,
+                        OrderId = context.Saga.CorrelationId,
                         OrderLineId = InVar.Id,
                         context.Message.Size,
                     });
@@ -32,7 +31,7 @@ namespace ForkJoint.Api.Components.Futures
                 {
                     x.UsingRequestInitializer(context => new
                     {
-                        OrderId = context.Instance.CorrelationId,
+                        OrderId = context.Saga.CorrelationId,
                         OrderLineId = InVar.Id,
                         context.Message.Flavor,
                         context.Message.Size,
@@ -48,9 +47,9 @@ namespace ForkJoint.Api.Components.Futures
 
             WhenAllCompleted(x => x.SetCompletedUsingInitializer(context =>
             {
-                var message = context.Instance.GetCommand<OrderFryShake>();
+                var message = context.GetCommand<OrderFryShake>();
 
-                return new {Description = $"{message.Size} {message.Flavor} FryShake({context.Instance.Results.Count})"};
+                return new { Description = $"{message.Size} {message.Flavor} FryShake({context.Saga.Results.Count})" };
             }));
         }
     }

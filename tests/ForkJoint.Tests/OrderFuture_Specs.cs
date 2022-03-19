@@ -8,8 +8,6 @@ namespace ForkJoint.Tests
     using Api.Services;
     using Contracts;
     using MassTransit;
-    using MassTransit.ExtensionsDependencyInjectionIntegration;
-    using MassTransit.Futures;
     using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
 
@@ -25,9 +23,7 @@ namespace ForkJoint.Tests
             var fryId = NewId.NextGuid();
             var burgerId = NewId.NextGuid();
 
-            using var scope = Provider.CreateScope();
-
-            var client = scope.ServiceProvider.GetRequiredService<IRequestClient<SubmitOrder>>();
+            IRequestClient<SubmitOrder> client = TestHarness.GetRequestClient<SubmitOrder>();
 
             Response<OrderCompleted, OrderFaulted> response = await client.GetResponse<OrderCompleted, OrderFaulted>(new
             {
@@ -68,9 +64,7 @@ namespace ForkJoint.Tests
             var fryId = NewId.NextGuid();
             var burgerId = NewId.NextGuid();
 
-            using var scope = Provider.CreateScope();
-
-            var client = scope.ServiceProvider.GetRequiredService<IRequestClient<SubmitOrder>>();
+            IRequestClient<SubmitOrder> client = TestHarness.GetRequestClient<SubmitOrder>();
 
             var values = new
             {
@@ -112,9 +106,7 @@ namespace ForkJoint.Tests
             var fryId = NewId.NextGuid();
             var burgerId = NewId.NextGuid();
 
-            using var scope = Provider.CreateScope();
-
-            var client = scope.ServiceProvider.GetRequiredService<IRequestClient<SubmitOrder>>();
+            IRequestClient<SubmitOrder> client = TestHarness.GetRequestClient<SubmitOrder>();
 
             Response<OrderCompleted, OrderFaulted> response = await client.GetResponse<OrderCompleted, OrderFaulted>(new
             {
@@ -150,9 +142,7 @@ namespace ForkJoint.Tests
             var fryId = NewId.NextGuid();
             var burgerId = NewId.NextGuid();
 
-            using var scope = Provider.CreateScope();
-
-            var client = scope.ServiceProvider.GetRequiredService<IRequestClient<SubmitOrder>>();
+            IRequestClient<SubmitOrder> client = TestHarness.GetRequestClient<SubmitOrder>();
 
             var values = new
             {
@@ -194,7 +184,7 @@ namespace ForkJoint.Tests
             collection.AddSingleton<IFryer, Fryer>();
         }
 
-        protected override void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator)
+        protected override void ConfigureMassTransit(IBusRegistrationConfigurator configurator)
         {
             configurator.AddConsumer<CookFryConsumer>();
             configurator.AddConsumer<CookOnionRingsConsumer>();

@@ -1,7 +1,7 @@
 namespace ForkJoint.Api.Components.Futures
 {
     using Contracts;
-    using MassTransit.Futures;
+    using MassTransit;
 
 
     public class ShakeFuture :
@@ -13,7 +13,7 @@ namespace ForkJoint.Api.Components.Futures
 
             SendRequest<PourShake>()
                 .OnResponseReceived<ShakeReady>(x =>
-                    x.SetCompletedUsingInitializer(context => new {Description = $"{context.Message.Size} {context.Message.Flavor} Shake"}));
+                    x.SetCompletedUsingInitializer(context => new { Description = $"{context.Message.Size} {context.Message.Flavor} Shake" }));
         }
     }
 }

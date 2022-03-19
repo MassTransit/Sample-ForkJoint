@@ -3,9 +3,6 @@ namespace ForkJoint.Tests
     using System;
     using System.Threading.Tasks;
     using MassTransit;
-    using MassTransit.Context;
-    using MassTransit.ExtensionsDependencyInjectionIntegration;
-    using MassTransit.Futures;
     using MassTransit.Testing;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -15,7 +12,7 @@ namespace ForkJoint.Tests
     public class FutureTestFixture
     {
         protected ServiceProvider Provider;
-        protected InMemoryTestHarness TestHarness;
+        protected ITestHarness TestHarness;
 
         [OneTimeSetUp]
         public async Task Setup()
@@ -23,7 +20,7 @@ namespace ForkJoint.Tests
             var collection = new ServiceCollection()
                 .AddSingleton<ILoggerFactory>(_ => new TestOutputLoggerFactory(true))
                 .AddSingleton(typeof(ILogger<>), typeof(Logger<>))
-                .AddMassTransitInMemoryTestHarness(cfg =>
+                .AddMassTransitTestHarness(cfg =>
                 {
                     cfg.AddSagaRepository<FutureState>()
                         .InMemoryRepository();
@@ -31,8 +28,7 @@ namespace ForkJoint.Tests
                     cfg.SetKebabCaseEndpointNameFormatter();
 
                     ConfigureMassTransit(cfg);
-                })
-                .AddGenericRequestClient();
+                });
 
             ConfigureServices(collection);
 
@@ -40,17 +36,13 @@ namespace ForkJoint.Tests
 
             ConfigureLogging();
 
-            TestHarness = Provider.GetRequiredService<InMemoryTestHarness>();
+            TestHarness = Provider.GetTestHarness();
             TestHarness.TestTimeout = TimeSpan.FromSeconds(10);
-            TestHarness.OnConfigureInMemoryBus += configurator =>
-            {
-                ConfigureInMemoryBus(configurator);
-            };
 
             await TestHarness.Start();
         }
 
-        protected virtual void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator)
+        protected virtual void ConfigureMassTransit(IBusRegistrationConfigurator configurator)
         {
         }
 
@@ -58,21 +50,10 @@ namespace ForkJoint.Tests
         {
         }
 
-        protected virtual void ConfigureInMemoryBus(IInMemoryBusFactoryConfigurator configurator)
-        {
-        }
-
         [OneTimeTearDown]
         public async Task Teardown()
         {
-            try
-            {
-                await TestHarness.Stop();
-            }
-            finally
-            {
-                await Provider.DisposeAsync();
-            }
+            await Provider.DisposeAsync();
         }
 
         void ConfigureLogging()

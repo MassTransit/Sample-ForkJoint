@@ -7,8 +7,6 @@ namespace ForkJoint.Tests
     using Api.Services;
     using Contracts;
     using MassTransit;
-    using MassTransit.ExtensionsDependencyInjectionIntegration;
-    using MassTransit.Futures;
     using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
 
@@ -23,9 +21,7 @@ namespace ForkJoint.Tests
             var orderId = NewId.NextGuid();
             var orderLineId = NewId.NextGuid();
 
-            var scope = Provider.CreateScope();
-
-            var client = scope.ServiceProvider.GetRequiredService<IRequestClient<OrderBurger>>();
+            IRequestClient<OrderBurger> client = TestHarness.GetRequestClient<OrderBurger>();
 
             Response<BurgerCompleted> response = await client.GetResponse<BurgerCompleted>(new
             {
@@ -51,9 +47,7 @@ namespace ForkJoint.Tests
             var orderId = NewId.NextGuid();
             var orderLineId = NewId.NextGuid();
 
-            var scope = Provider.CreateScope();
-
-            var client = scope.ServiceProvider.GetRequiredService<IRequestClient<OrderBurger>>();
+            IRequestClient<OrderBurger> client = TestHarness.GetRequestClient<OrderBurger>();
 
             try
             {
@@ -85,7 +79,7 @@ namespace ForkJoint.Tests
             collection.AddScoped<IItineraryPlanner<OrderBurger>, BurgerItineraryPlanner>();
         }
 
-        protected override void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator)
+        protected override void ConfigureMassTransit(IBusRegistrationConfigurator configurator)
         {
             configurator.AddActivitiesFromNamespaceContaining<GrillBurgerActivity>();
 

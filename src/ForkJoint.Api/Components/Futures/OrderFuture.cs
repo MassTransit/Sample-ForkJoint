@@ -5,7 +5,6 @@ namespace ForkJoint.Api.Components.Futures
     using System.Linq;
     using Contracts;
     using MassTransit;
-    using MassTransit.Futures;
 
 
     public class OrderFuture :
@@ -46,61 +45,61 @@ namespace ForkJoint.Api.Components.Futures
 
             WhenAllCompleted(r => r.SetCompletedUsingInitializer(context => new
             {
-                LinesCompleted = context.Instance.Results.Select(x => x.Value.ToObject<OrderLineCompleted>()).ToDictionary(x => x.OrderLineId),
+                LinesCompleted = context.Saga.Results.Select(x => context.ToObject<OrderLineCompleted>(x.Value)).ToDictionary(x => x.OrderLineId),
             }));
 
             WhenAnyFaulted(f => f.SetFaultedUsingInitializer(context => MapOrderFaulted(context)));
         }
 
-        static object MapOrderFryShake(FutureConsumeContext<FryShake> context)
+        static object MapOrderFryShake(BehaviorContext<FutureState, FryShake> context)
         {
             return new
             {
-                OrderId = context.Instance.CorrelationId,
+                OrderId = context.Saga.CorrelationId,
                 OrderLineId = context.Message.FryShakeId,
                 context.Message.Size,
                 context.Message.Flavor
             };
         }
 
-        static object MapOrderShake(FutureConsumeContext<Shake> context)
+        static object MapOrderShake(BehaviorContext<FutureState, Shake> context)
         {
             return new
             {
-                OrderId = context.Instance.CorrelationId,
+                OrderId = context.Saga.CorrelationId,
                 OrderLineId = context.Message.ShakeId,
                 context.Message.Size,
                 context.Message.Flavor
             };
         }
 
-        static object MapOrderFry(FutureConsumeContext<Fry> context)
+        static object MapOrderFry(BehaviorContext<FutureState, Fry> context)
         {
             return new
             {
-                OrderId = context.Instance.CorrelationId,
+                OrderId = context.Saga.CorrelationId,
                 OrderLineId = context.Message.FryId,
                 context.Message.Size,
             };
         }
 
-        static object MapOrderBurger(FutureConsumeContext<Burger> context)
+        static object MapOrderBurger(BehaviorContext<FutureState, Burger> context)
         {
             return new
             {
-                OrderId = context.Instance.CorrelationId,
+                OrderId = context.Saga.CorrelationId,
                 OrderLineId = context.Message.BurgerId,
                 Burger = context.Message
             };
         }
 
-        static object MapOrderFaulted(FutureConsumeContext context)
+        static object MapOrderFaulted(BehaviorContext<FutureState> context)
         {
-            Dictionary<Guid, Fault> faults = context.Instance.Faults.ToDictionary(x => x.Key, x => x.Value.ToObject<Fault>());
+            Dictionary<Guid, Fault> faults = context.Saga.Faults.ToDictionary(x => x.Key, x => context.ToObject<Fault>(x.Value));
 
             return new
             {
-                LinesCompleted = context.Instance.Results.ToDictionary(x => x.Key, x => x.Value.ToObject<OrderLineCompleted>()),
+                LinesCompleted = context.Saga.Results.ToDictionary(x => x.Key, x => context.ToObject<OrderLineCompleted>(x.Value)),
                 LinesFaulted = faults,
                 Exceptions = faults.SelectMany(x => x.Value.Exceptions).ToArray()
             };

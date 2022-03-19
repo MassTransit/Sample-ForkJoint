@@ -2,9 +2,9 @@ namespace ForkJoint.Api
 {
     using System;
     using System.Linq;
+    using MassTransit;
     using MassTransit.Futures.Contracts;
-    using MassTransit.Internals.Extensions;
-    using MassTransit.Topology;
+    using MassTransit.Internals;
 
 
     public class CustomEntityNameFormatter :

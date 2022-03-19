@@ -1,9 +1,6 @@
 namespace ForkJoint.Api
 {
     using MassTransit;
-    using MassTransit.Courier;
-    using MassTransit.Definition;
-    using MassTransit.Saga;
 
 
     public class CustomEndpointNameFormatter :
@@ -61,5 +58,7 @@ namespace ForkJoint.Api
         {
             return _formatter.SanitizeName(name);
         }
+
+        public string Separator => _formatter.Separator;
     }
 }

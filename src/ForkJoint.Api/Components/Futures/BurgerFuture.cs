@@ -1,8 +1,7 @@
 namespace ForkJoint.Api.Components.Futures
 {
     using Contracts;
-    using MassTransit.Courier;
-    using MassTransit.Futures;
+    using MassTransit;
 
 
     public class BurgerFuture :
@@ -16,7 +15,7 @@ namespace ForkJoint.Api.Components.Futures
                 .OnRoutingSlipCompleted(r => r
                     .SetCompletedUsingInitializer(context =>
                     {
-                        var burger = context.Message.GetVariable<Burger>(nameof(BurgerCompleted.Burger));
+                        var burger = context.GetVariable<Burger>(nameof(BurgerCompleted.Burger));
 
                         return new
                         {

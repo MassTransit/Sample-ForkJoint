@@ -7,7 +7,6 @@ namespace ForkJoint.Tests
     using Api.Services;
     using Contracts;
     using MassTransit;
-    using MassTransit.ExtensionsDependencyInjectionIntegration;
     using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
 
@@ -24,9 +23,7 @@ namespace ForkJoint.Tests
 
             var startedAt = DateTime.UtcNow;
 
-            var scope = Provider.CreateScope();
-
-            var client = scope.ServiceProvider.GetRequiredService<IRequestClient<OrderFry>>();
+            IRequestClient<OrderFry> client = TestHarness.GetRequestClient<OrderFry>();
 
             Response<FryCompleted> response = await client.GetResponse<FryCompleted>(new
             {
@@ -47,7 +44,7 @@ namespace ForkJoint.Tests
             collection.AddSingleton<IFryer, Fryer>();
         }
 
-        protected override void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator)
+        protected override void ConfigureMassTransit(IBusRegistrationConfigurator configurator)
         {
             configurator.AddConsumer<CookFryConsumer>();
             configurator.AddFuture<FryFuture>();

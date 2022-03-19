@@ -71,8 +71,6 @@ namespace ForkJoint.Api
                     m.MigrationsHistoryTable($"__{nameof(ForkJointSagaDbContext)}");
                 }));
 
-            services.AddGenericRequestClient();
-
             services.AddMassTransit(x =>
                 {
                     x.ApplyCustomMassTransitConfiguration();
@@ -115,8 +113,7 @@ namespace ForkJoint.Api
 
                         cfg.ConfigureEndpoints(context);
                     });
-                })
-                .AddMassTransitHostedService();
+                });
 
             services.AddControllers();
             services.AddSwaggerGen(c =>

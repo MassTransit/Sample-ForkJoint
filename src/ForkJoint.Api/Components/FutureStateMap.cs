@@ -2,9 +2,8 @@ namespace ForkJoint.Api.Components
 {
     using System;
     using System.Collections.Generic;
+    using MassTransit;
     using MassTransit.EntityFrameworkCoreIntegration;
-    using MassTransit.EntityFrameworkCoreIntegration.Mappings;
-    using MassTransit.Futures;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

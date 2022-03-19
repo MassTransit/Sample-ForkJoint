@@ -7,7 +7,6 @@ namespace ForkJoint.Tests
     using Api.Services;
     using Contracts;
     using MassTransit;
-    using MassTransit.ExtensionsDependencyInjectionIntegration;
     using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
 
@@ -24,9 +23,7 @@ namespace ForkJoint.Tests
 
             var startedAt = DateTime.UtcNow;
 
-            var scope = Provider.CreateScope();
-
-            var client = scope.ServiceProvider.GetRequiredService<IRequestClient<OrderShake>>();
+            IRequestClient<OrderShake> client = TestHarness.GetRequestClient<OrderShake>();
 
             Response<ShakeCompleted> response = await client.GetResponse<ShakeCompleted>(new
             {
@@ -48,7 +45,7 @@ namespace ForkJoint.Tests
             collection.AddSingleton<IShakeMachine, ShakeMachine>();
         }
 
-        protected override void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator)
+        protected override void ConfigureMassTransit(IBusRegistrationConfigurator configurator)
         {
             configurator.AddConsumer<PourShakeConsumer>();
 

@@ -1,7 +1,7 @@
 namespace ForkJoint.Api.Components.Activities
 {
     using System.Threading.Tasks;
-    using MassTransit.Courier;
+    using MassTransit;
     using Microsoft.Extensions.Logging;
     using Services;
 

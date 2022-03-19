@@ -5,8 +5,6 @@ namespace ForkJoint.Api.Components.ItineraryPlanners
     using Activities;
     using Contracts;
     using MassTransit;
-    using MassTransit.Courier;
-    using MassTransit.Futures;
 
 
     public class BurgerItineraryPlanner :
@@ -21,7 +19,7 @@ namespace ForkJoint.Api.Components.ItineraryPlanners
             _dressAddress = new Uri($"exchange:{formatter.ExecuteActivity<DressBurgerActivity, DressBurgerArguments>()}");
         }
 
-        public async Task PlanItinerary(FutureConsumeContext<OrderBurger> context, ItineraryBuilder builder)
+        public async Task PlanItinerary(BehaviorContext<FutureState, OrderBurger> context, IItineraryBuilder builder)
         {
             var orderBurger = context.Message;
 
