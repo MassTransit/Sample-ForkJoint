@@ -1,24 +1,23 @@
-namespace ForkJoint.Api.Components.Activities
+namespace ForkJoint.Api.Components.Activities;
+
+using System;
+using Contracts;
+
+
+public interface DressBurgerArguments
 {
-    using System;
-    using Contracts;
+    Guid OrderId { get; }
+    Guid BurgerId { get; }
 
+    BurgerPatty Patty { get; }
 
-    public interface DressBurgerArguments
-    {
-        Guid OrderId { get; }
-        Guid BurgerId { get; }
+    bool Lettuce { get; }
+    bool Pickle { get; }
+    bool Onion { get; }
+    bool Ketchup { get; }
+    bool Mustard { get; }
+    bool BarbecueSauce { get; }
+    bool OnionRing { get; }
 
-        BurgerPatty Patty { get; }
-
-        bool Lettuce { get; }
-        bool Pickle { get; }
-        bool Onion { get; }
-        bool Ketchup { get; }
-        bool Mustard { get; }
-        bool BarbecueSauce { get; }
-        bool OnionRing { get; }
-
-        Guid? OnionRingId { get; }
-    }
+    Guid? OnionRingId { get; }
 }

@@ -1,8 +1,7 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+public interface OrderFry :
+    OrderLine
 {
-    public interface OrderFry :
-        OrderLine
-    {
-        Size Size { get; }
-    }
+    Size Size { get; }
 }

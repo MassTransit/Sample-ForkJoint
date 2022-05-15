@@ -1,17 +1,16 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+using System;
+
+
+public record FryShake
 {
-    using System;
+    public Guid FryShakeId { get; init; }
+    public string Flavor { get; init; }
+    public Size Size { get; init; }
 
-
-    public record FryShake
+    public override string ToString()
     {
-        public Guid FryShakeId { get; init; }
-        public string Flavor { get; init; }
-        public Size Size { get; init; }
-
-        public override string ToString()
-        {
-            return $"{Size} {Flavor} FryShake";
-        }
+        return $"{Size} {Flavor} FryShake";
     }
 }

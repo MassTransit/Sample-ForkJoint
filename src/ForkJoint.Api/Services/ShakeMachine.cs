@@ -1,15 +1,14 @@
-namespace ForkJoint.Api.Services
+namespace ForkJoint.Api.Services;
+
+using System.Threading.Tasks;
+using Contracts;
+
+
+public class ShakeMachine :
+    IShakeMachine
 {
-    using System.Threading.Tasks;
-    using Contracts;
-
-
-    public class ShakeMachine :
-        IShakeMachine
+    public async Task PourShake(string flavor, Size size)
     {
-        public async Task PourShake(string flavor, Size size)
-        {
-            await Task.Delay(1000);
-        }
+        await Task.Delay(1000);
     }
 }

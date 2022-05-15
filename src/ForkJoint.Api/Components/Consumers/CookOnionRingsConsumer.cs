@@ -1,31 +1,30 @@
-namespace ForkJoint.Api.Components.Consumers
+namespace ForkJoint.Api.Components.Consumers;
+
+using System.Threading.Tasks;
+using Contracts;
+using MassTransit;
+using Services;
+
+
+public class CookOnionRingsConsumer :
+    IConsumer<CookOnionRings>
 {
-    using System.Threading.Tasks;
-    using Contracts;
-    using MassTransit;
-    using Services;
+    readonly IFryer _fryer;
 
-
-    public class CookOnionRingsConsumer :
-        IConsumer<CookOnionRings>
+    public CookOnionRingsConsumer(IFryer fryer)
     {
-        readonly IFryer _fryer;
+        _fryer = fryer;
+    }
 
-        public CookOnionRingsConsumer(IFryer fryer)
+    public async Task Consume(ConsumeContext<CookOnionRings> context)
+    {
+        await _fryer.CookOnionRings(context.Message.Quantity);
+
+        await context.RespondAsync<OnionRingsReady>(new
         {
-            _fryer = fryer;
-        }
-
-        public async Task Consume(ConsumeContext<CookOnionRings> context)
-        {
-            await _fryer.CookOnionRings(context.Message.Quantity);
-
-            await context.RespondAsync<OnionRingsReady>(new
-            {
-                context.Message.OrderId,
-                context.Message.OrderLineId,
-                context.Message.Quantity
-            });
-        }
+            context.Message.OrderId,
+            context.Message.OrderLineId,
+            context.Message.Quantity
+        });
     }
 }

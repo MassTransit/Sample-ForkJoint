@@ -1,10 +1,9 @@
-namespace ForkJoint.Api.Components.Activities
+namespace ForkJoint.Api.Components.Activities;
+
+using Contracts;
+
+
+public interface GrillBurgerLog
 {
-    using Contracts;
-
-
-    public interface GrillBurgerLog
-    {
-        BurgerPatty Patty { get; }
-    }
+    BurgerPatty Patty { get; }
 }

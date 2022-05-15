@@ -1,66 +1,65 @@
-namespace ForkJoint.Tests
+namespace ForkJoint.Tests;
+
+using System;
+using System.Threading.Tasks;
+using MassTransit;
+using MassTransit.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using NUnit.Framework;
+
+
+public class FutureTestFixture
 {
-    using System;
-    using System.Threading.Tasks;
-    using MassTransit;
-    using MassTransit.Testing;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using NUnit.Framework;
+    protected ServiceProvider Provider;
+    protected ITestHarness TestHarness;
 
-
-    public class FutureTestFixture
+    [OneTimeSetUp]
+    public async Task Setup()
     {
-        protected ServiceProvider Provider;
-        protected ITestHarness TestHarness;
+        var collection = new ServiceCollection()
+            .AddSingleton<ILoggerFactory>(_ => new TestOutputLoggerFactory(true))
+            .AddSingleton(typeof(ILogger<>), typeof(Logger<>))
+            .AddMassTransitTestHarness(cfg =>
+            {
+                cfg.AddSagaRepository<FutureState>()
+                    .InMemoryRepository();
 
-        [OneTimeSetUp]
-        public async Task Setup()
-        {
-            var collection = new ServiceCollection()
-                .AddSingleton<ILoggerFactory>(_ => new TestOutputLoggerFactory(true))
-                .AddSingleton(typeof(ILogger<>), typeof(Logger<>))
-                .AddMassTransitTestHarness(cfg =>
-                {
-                    cfg.AddSagaRepository<FutureState>()
-                        .InMemoryRepository();
+                cfg.SetKebabCaseEndpointNameFormatter();
 
-                    cfg.SetKebabCaseEndpointNameFormatter();
+                ConfigureMassTransit(cfg);
+            });
 
-                    ConfigureMassTransit(cfg);
-                });
+        ConfigureServices(collection);
 
-            ConfigureServices(collection);
+        Provider = collection.BuildServiceProvider(true);
 
-            Provider = collection.BuildServiceProvider(true);
+        ConfigureLogging();
 
-            ConfigureLogging();
+        TestHarness = Provider.GetTestHarness();
+        TestHarness.TestTimeout = TimeSpan.FromSeconds(10);
 
-            TestHarness = Provider.GetTestHarness();
-            TestHarness.TestTimeout = TimeSpan.FromSeconds(10);
+        await TestHarness.Start();
+    }
 
-            await TestHarness.Start();
-        }
+    protected virtual void ConfigureMassTransit(IBusRegistrationConfigurator configurator)
+    {
+    }
 
-        protected virtual void ConfigureMassTransit(IBusRegistrationConfigurator configurator)
-        {
-        }
+    protected virtual void ConfigureServices(IServiceCollection collection)
+    {
+    }
 
-        protected virtual void ConfigureServices(IServiceCollection collection)
-        {
-        }
+    [OneTimeTearDown]
+    public async Task Teardown()
+    {
+        await Provider.DisposeAsync();
+    }
 
-        [OneTimeTearDown]
-        public async Task Teardown()
-        {
-            await Provider.DisposeAsync();
-        }
+    void ConfigureLogging()
+    {
+        var loggerFactory = Provider.GetRequiredService<ILoggerFactory>();
 
-        void ConfigureLogging()
-        {
-            var loggerFactory = Provider.GetRequiredService<ILoggerFactory>();
-
-            LogContext.ConfigureCurrentLogContext(loggerFactory);
-        }
+        LogContext.ConfigureCurrentLogContext(loggerFactory);
     }
 }

@@ -1,8 +1,7 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+public interface BurgerCompleted :
+    OrderLineCompleted
 {
-    public interface BurgerCompleted :
-        OrderLineCompleted
-    {
-        Burger Burger { get; }
-    }
+    Burger Burger { get; }
 }

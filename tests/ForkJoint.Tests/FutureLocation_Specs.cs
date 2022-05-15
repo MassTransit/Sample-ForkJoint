@@ -1,28 +1,27 @@
-namespace ForkJoint.Tests
+namespace ForkJoint.Tests;
+
+using System;
+using MassTransit;
+using MassTransit.Futures;
+using NUnit.Framework;
+
+
+[TestFixture]
+public class FutureLocation_Specs
 {
-    using System;
-    using MassTransit;
-    using MassTransit.Futures;
-    using NUnit.Framework;
-
-
-    [TestFixture]
-    public class FutureLocation_Specs
+    [Test]
+    public void Should_round_trip_without_issue()
     {
-        [Test]
-        public void Should_round_trip_without_issue()
-        {
-            var address = new Uri("loopback://localhost/input-queue");
-            var id = NewId.NextGuid();
+        var address = new Uri("loopback://localhost/input-queue");
+        var id = NewId.NextGuid();
 
-            var futureLocation = new FutureLocation(id, address);
+        var futureLocation = new FutureLocation(id, address);
 
-            Uri location = futureLocation;
+        Uri location = futureLocation;
 
-            var returnedLocation = new FutureLocation(location);
+        var returnedLocation = new FutureLocation(location);
 
-            Assert.That(returnedLocation.Id, Is.EqualTo(id));
-            Assert.That(returnedLocation.Address, Is.EqualTo(new Uri("queue:input-queue")));
-        }
+        Assert.That(returnedLocation.Id, Is.EqualTo(id));
+        Assert.That(returnedLocation.Address, Is.EqualTo(new Uri("queue:input-queue")));
     }
 }

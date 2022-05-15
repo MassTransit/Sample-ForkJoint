@@ -1,19 +1,18 @@
-namespace ForkJoint.Api.Components.Futures
+namespace ForkJoint.Api.Components.Futures;
+
+using Contracts;
+using MassTransit;
+
+
+public class ShakeFuture :
+    Future<OrderShake, ShakeCompleted>
 {
-    using Contracts;
-    using MassTransit;
-
-
-    public class ShakeFuture :
-        Future<OrderShake, ShakeCompleted>
+    public ShakeFuture()
     {
-        public ShakeFuture()
-        {
-            ConfigureCommand(x => x.CorrelateById(context => context.Message.OrderLineId));
+        ConfigureCommand(x => x.CorrelateById(context => context.Message.OrderLineId));
 
-            SendRequest<PourShake>()
-                .OnResponseReceived<ShakeReady>(x =>
-                    x.SetCompletedUsingInitializer(context => new { Description = $"{context.Message.Size} {context.Message.Flavor} Shake" }));
-        }
+        SendRequest<PourShake>()
+            .OnResponseReceived<ShakeReady>(x =>
+                x.SetCompletedUsingInitializer(context => new { Description = $"{context.Message.Size} {context.Message.Flavor} Shake" }));
     }
 }

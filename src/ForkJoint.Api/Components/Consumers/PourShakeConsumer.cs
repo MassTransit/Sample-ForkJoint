@@ -1,33 +1,32 @@
-namespace ForkJoint.Api.Components.Consumers
+namespace ForkJoint.Api.Components.Consumers;
+
+using System.Threading.Tasks;
+using Contracts;
+using MassTransit;
+using Services;
+
+
+public class PourShakeConsumer :
+    IConsumer<PourShake>
 {
-    using System.Threading.Tasks;
-    using Contracts;
-    using MassTransit;
-    using Services;
+    readonly IShakeMachine _shakeMachine;
 
-
-    public class PourShakeConsumer :
-        IConsumer<PourShake>
+    public PourShakeConsumer(IShakeMachine shakeMachine)
     {
-        readonly IShakeMachine _shakeMachine;
+        _shakeMachine = shakeMachine;
+    }
 
-        public PourShakeConsumer(IShakeMachine shakeMachine)
+    public async Task Consume(ConsumeContext<PourShake> context)
+    {
+        await _shakeMachine.PourShake(context.Message.Flavor,
+            context.Message.Size);
+
+        await context.RespondAsync<ShakeReady>(new
         {
-            _shakeMachine = shakeMachine;
-        }
-
-        public async Task Consume(ConsumeContext<PourShake> context)
-        {
-            await _shakeMachine.PourShake(context.Message.Flavor,
-                context.Message.Size);
-
-            await context.RespondAsync<ShakeReady>(new
-            {
-                context.Message.OrderId,
-                context.Message.OrderLineId,
-                context.Message.Flavor,
-                context.Message.Size
-            });
-        }
+            context.Message.OrderId,
+            context.Message.OrderLineId,
+            context.Message.Flavor,
+            context.Message.Size
+        });
     }
 }

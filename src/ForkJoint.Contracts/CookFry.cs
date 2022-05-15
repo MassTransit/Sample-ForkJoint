@@ -1,29 +1,28 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+using System;
+
+
+public interface CookFry
 {
-    using System;
+    Guid OrderId { get; }
+    Guid OrderLineId { get; }
+
+    Size Size { get; }
+}
 
 
-    public interface CookFry
+public class CookFryRequest :
+    CookFry
+{
+    public CookFryRequest(Guid orderId, Guid orderLineId, Size size)
     {
-        Guid OrderId { get; }
-        Guid OrderLineId { get; }
-
-        Size Size { get; }
+        OrderId = orderId;
+        OrderLineId = orderLineId;
+        Size = size;
     }
 
-
-    public class CookFryRequest :
-        CookFry
-    {
-        public CookFryRequest(Guid orderId, Guid orderLineId, Size size)
-        {
-            OrderId = orderId;
-            OrderLineId = orderLineId;
-            Size = size;
-        }
-
-        public Guid OrderId { get; }
-        public Guid OrderLineId { get; }
-        public Size Size { get; }
-    }
+    public Guid OrderId { get; }
+    public Guid OrderLineId { get; }
+    public Size Size { get; }
 }

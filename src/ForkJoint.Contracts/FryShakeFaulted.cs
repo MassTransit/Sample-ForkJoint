@@ -1,7 +1,6 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+public interface FryShakeFaulted :
+    OrderLineFaulted
 {
-    public interface FryShakeFaulted :
-        OrderLineFaulted
-    {
-    }
 }

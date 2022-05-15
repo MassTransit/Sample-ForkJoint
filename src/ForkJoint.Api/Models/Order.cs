@@ -1,18 +1,17 @@
-namespace ForkJoint.Api.Models
+namespace ForkJoint.Api.Models;
+
+using System;
+using System.ComponentModel.DataAnnotations;
+using Contracts;
+
+
+public class Order
 {
-    using System;
-    using System.ComponentModel.DataAnnotations;
-    using Contracts;
+    [Required]
+    public Guid OrderId { get; init; }
 
-
-    public class Order
-    {
-        [Required]
-        public Guid OrderId { get; init; }
-
-        public Burger[] Burgers { get; init; }
-        public Fry[] Fries { get; init; }
-        public Shake[] Shakes { get; init; }
-        public FryShake[] FryShakes { get; init; }
-    }
+    public Burger[] Burgers { get; init; }
+    public Fry[] Fries { get; init; }
+    public Shake[] Shakes { get; init; }
+    public FryShake[] FryShakes { get; init; }
 }

@@ -1,15 +1,14 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+public interface FryShakeCompleted :
+    OrderLineCompleted
 {
-    public interface FryShakeCompleted :
-        OrderLineCompleted
-    {
-        string Flavor { get; }
-        Size Size { get; }
-    }
+    string Flavor { get; }
+    Size Size { get; }
+}
 
 
-    public interface ComboCompleted :
-        OrderLineCompleted
-    {
-    }
+public interface ComboCompleted :
+    OrderLineCompleted
+{
 }
