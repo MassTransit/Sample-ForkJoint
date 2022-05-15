@@ -1,51 +1,50 @@
-namespace ForkJoint.Api.Services
+namespace ForkJoint.Api.Services;
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Contracts;
+using Microsoft.Extensions.Logging;
+
+
+public class Grill :
+    IGrill
 {
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using Contracts;
-    using Microsoft.Extensions.Logging;
+    readonly ILogger<Grill> _logger;
+    readonly HashSet<BurgerPatty> _patties;
 
-
-    public class Grill :
-        IGrill
+    public Grill(ILogger<Grill> logger)
     {
-        readonly ILogger<Grill> _logger;
-        readonly HashSet<BurgerPatty> _patties;
+        _logger = logger;
+        _patties = new HashSet<BurgerPatty>();
+    }
 
-        public Grill(ILogger<Grill> logger)
+    public async Task<BurgerPatty> CookOrUseExistingPatty(decimal weight, bool cheese)
+    {
+        var existing = _patties.FirstOrDefault(x => x.Cheese == cheese && x.Weight == weight);
+        if (existing != null)
         {
-            _logger = logger;
-            _patties = new HashSet<BurgerPatty>();
+            _logger.LogDebug("Using existing patty {Weight} {Cheese}", existing.Weight, existing.Cheese);
+
+            _patties.Remove(existing);
+            return existing;
         }
 
-        public async Task<BurgerPatty> CookOrUseExistingPatty(decimal weight, bool cheese)
+        _logger.LogDebug("Grilling patty {Weight} {Cheese}", weight, cheese);
+
+        await Task.Delay(5000 + (int)(1000.0m * weight));
+
+        var patty = new BurgerPatty
         {
-            var existing = _patties.FirstOrDefault(x => x.Cheese == cheese && x.Weight == weight);
-            if (existing != null)
-            {
-                _logger.LogDebug("Using existing patty {Weight} {Cheese}", existing.Weight, existing.Cheese);
+            Weight = weight,
+            Cheese = cheese
+        };
 
-                _patties.Remove(existing);
-                return existing;
-            }
+        return patty;
+    }
 
-            _logger.LogDebug("Grilling patty {Weight} {Cheese}", weight, cheese);
-
-            await Task.Delay(5000 + (int)(1000.0m * weight));
-
-            var patty = new BurgerPatty
-            {
-                Weight = weight,
-                Cheese = cheese
-            };
-
-            return patty;
-        }
-
-        public void Add(BurgerPatty patty)
-        {
-            _patties.Add(patty);
-        }
+    public void Add(BurgerPatty patty)
+    {
+        _patties.Add(patty);
     }
 }

@@ -1,9 +1,8 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+public interface ShakeCompleted :
+    OrderLineCompleted
 {
-    public interface ShakeCompleted :
-        OrderLineCompleted
-    {
-        string Flavor { get; }
-        Size Size { get; }
-    }
+    string Flavor { get; }
+    Size Size { get; }
 }

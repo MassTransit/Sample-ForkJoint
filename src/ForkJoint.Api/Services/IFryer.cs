@@ -1,13 +1,12 @@
-namespace ForkJoint.Api.Services
+namespace ForkJoint.Api.Services;
+
+using System.Threading.Tasks;
+using Contracts;
+
+
+public interface IFryer
 {
-    using System.Threading.Tasks;
-    using Contracts;
+    Task CookOnionRings(int quantity);
 
-
-    public interface IFryer
-    {
-        Task CookOnionRings(int quantity);
-
-        Task CookFry(Size size);
-    }
+    Task CookFry(Size size);
 }

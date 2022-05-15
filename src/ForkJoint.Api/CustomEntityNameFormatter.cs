@@ -1,37 +1,36 @@
-namespace ForkJoint.Api
+namespace ForkJoint.Api;
+
+using System;
+using System.Linq;
+using MassTransit;
+using MassTransit.Futures.Contracts;
+using MassTransit.Internals;
+
+
+public class CustomEntityNameFormatter :
+    IEntityNameFormatter
 {
-    using System;
-    using System.Linq;
-    using MassTransit;
-    using MassTransit.Futures.Contracts;
-    using MassTransit.Internals;
+    readonly IEntityNameFormatter _entityNameFormatter;
 
-
-    public class CustomEntityNameFormatter :
-        IEntityNameFormatter
+    public CustomEntityNameFormatter(IEntityNameFormatter entityNameFormatter)
     {
-        readonly IEntityNameFormatter _entityNameFormatter;
+        _entityNameFormatter = entityNameFormatter;
+    }
 
-        public CustomEntityNameFormatter(IEntityNameFormatter entityNameFormatter)
+    public string FormatEntityName<T>()
+    {
+        if (typeof(T).ClosesType(typeof(Get<>), out Type[] types))
         {
-            _entityNameFormatter = entityNameFormatter;
+            var name = (string)typeof(IEntityNameFormatter)
+                .GetMethod("FormatEntityName")
+                .MakeGenericMethod(types)
+                .Invoke(_entityNameFormatter, Array.Empty<object>());
+
+            var suffix = typeof(T).Name.Split('`').First();
+
+            return $"{name}-{suffix}";
         }
 
-        public string FormatEntityName<T>()
-        {
-            if (typeof(T).ClosesType(typeof(Get<>), out Type[] types))
-            {
-                var name = (string)typeof(IEntityNameFormatter)
-                    .GetMethod("FormatEntityName")
-                    .MakeGenericMethod(types)
-                    .Invoke(_entityNameFormatter, Array.Empty<object>());
-
-                var suffix = typeof(T).Name.Split('`').First();
-
-                return $"{name}-{suffix}";
-            }
-
-            return _entityNameFormatter.FormatEntityName<T>();
-        }
+        return _entityNameFormatter.FormatEntityName<T>();
     }
 }

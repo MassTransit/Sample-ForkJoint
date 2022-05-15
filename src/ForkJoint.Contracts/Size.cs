@@ -1,9 +1,8 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+public enum Size
 {
-    public enum Size
-    {
-        Small,
-        Medium,
-        Large,
-    }
+    Small,
+    Medium,
+    Large,
 }

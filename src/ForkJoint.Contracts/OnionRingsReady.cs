@@ -1,12 +1,11 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+using System;
+
+
+public interface OnionRingsReady
 {
-    using System;
-
-
-    public interface OnionRingsReady
-    {
-        Guid OrderId { get; }
-        Guid OrderLineId { get; }
-        int Quantity { get; }
-    }
+    Guid OrderId { get; }
+    Guid OrderLineId { get; }
+    int Quantity { get; }
 }

@@ -1,16 +1,15 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+public interface OrderFryShake :
+    OrderLine
 {
-    public interface OrderFryShake :
-        OrderLine
-    {
-        string Flavor { get; }
-        Size Size { get; }
-    }
+    string Flavor { get; }
+    Size Size { get; }
+}
 
 
-    public interface OrderCombo :
-        OrderLine
-    {
-        int Number { get; }
-    }
+public interface OrderCombo :
+    OrderLine
+{
+    int Number { get; }
 }

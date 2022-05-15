@@ -4,6 +4,7 @@ using ForkJoint.Api.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ForkJoint.Api.Migrations
 {
     [DbContext(typeof(ForkJointSagaDbContext))]
-    partial class ForkJointSagaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220515022757_foobar")]
+    partial class ef6update
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

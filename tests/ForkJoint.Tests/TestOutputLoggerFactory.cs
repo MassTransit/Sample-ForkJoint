@@ -1,32 +1,31 @@
-namespace ForkJoint.Tests
+namespace ForkJoint.Tests;
+
+using Microsoft.Extensions.Logging;
+using NUnit.Framework.Internal;
+
+
+public class TestOutputLoggerFactory :
+    ILoggerFactory
 {
-    using Microsoft.Extensions.Logging;
-    using NUnit.Framework.Internal;
+    readonly bool _enabled;
 
-
-    public class TestOutputLoggerFactory :
-        ILoggerFactory
+    public TestOutputLoggerFactory(bool enabled)
     {
-        readonly bool _enabled;
+        _enabled = enabled;
+    }
 
-        public TestOutputLoggerFactory(bool enabled)
-        {
-            _enabled = enabled;
-        }
+    public TestExecutionContext Current { get; set; }
 
-        public TestExecutionContext Current { get; set; }
+    public Microsoft.Extensions.Logging.ILogger CreateLogger(string name)
+    {
+        return new TestOutputLogger(this, _enabled);
+    }
 
-        public Microsoft.Extensions.Logging.ILogger CreateLogger(string name)
-        {
-            return new TestOutputLogger(this, _enabled);
-        }
+    public void AddProvider(ILoggerProvider provider)
+    {
+    }
 
-        public void AddProvider(ILoggerProvider provider)
-        {
-        }
-
-        public void Dispose()
-        {
-        }
+    public void Dispose()
+    {
     }
 }

@@ -1,31 +1,30 @@
-namespace ForkJoint.Api.Components.Consumers
+namespace ForkJoint.Api.Components.Consumers;
+
+using System.Threading.Tasks;
+using Contracts;
+using MassTransit;
+using Services;
+
+
+public class CookFryConsumer :
+    IConsumer<CookFry>
 {
-    using System.Threading.Tasks;
-    using Contracts;
-    using MassTransit;
-    using Services;
+    readonly IFryer _fryer;
 
-
-    public class CookFryConsumer :
-        IConsumer<CookFry>
+    public CookFryConsumer(IFryer fryer)
     {
-        readonly IFryer _fryer;
+        _fryer = fryer;
+    }
 
-        public CookFryConsumer(IFryer fryer)
+    public async Task Consume(ConsumeContext<CookFry> context)
+    {
+        await _fryer.CookFry(context.Message.Size);
+
+        await context.RespondAsync<FryReady>(new
         {
-            _fryer = fryer;
-        }
-
-        public async Task Consume(ConsumeContext<CookFry> context)
-        {
-            await _fryer.CookFry(context.Message.Size);
-
-            await context.RespondAsync<FryReady>(new
-            {
-                context.Message.OrderId,
-                context.Message.OrderLineId,
-                context.Message.Size
-            });
-        }
+            context.Message.OrderId,
+            context.Message.OrderLineId,
+            context.Message.Size
+        });
     }
 }

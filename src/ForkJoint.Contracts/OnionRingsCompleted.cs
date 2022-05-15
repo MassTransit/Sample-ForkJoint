@@ -1,8 +1,7 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+public interface OnionRingsCompleted :
+    OrderLineCompleted
 {
-    public interface OnionRingsCompleted :
-        OrderLineCompleted
-    {
-        int Quantity { get; }
-    }
+    int Quantity { get; }
 }

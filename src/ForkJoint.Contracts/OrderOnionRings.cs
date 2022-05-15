@@ -1,8 +1,7 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+public interface OrderOnionRings :
+    OrderLine
 {
-    public interface OrderOnionRings :
-        OrderLine
-    {
-        int Quantity { get; }
-    }
+    int Quantity { get; }
 }

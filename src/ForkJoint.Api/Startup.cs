@@ -1,182 +1,214 @@
-namespace ForkJoint.Api
+namespace ForkJoint.Api;
+
+using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+using Components;
+using Components.Activities;
+using Components.Consumers;
+using Components.Futures;
+using Components.ItineraryPlanners;
+using Contracts;
+using OpenTelemetry;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using MassTransit;
+using MassTransit.EntityFrameworkCoreIntegration;
+using Microsoft.ApplicationInsights.DependencyCollector;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Serilog;
+using Services;
+
+
+public class Startup
 {
-    using System;
-    using System.Linq;
-    using System.Reflection;
-    using System.Threading.Tasks;
-    using Components;
-    using Components.Activities;
-    using Components.Consumers;
-    using Components.Futures;
-    using Components.ItineraryPlanners;
-    using Contracts;
-    using MassTransit;
-    using MassTransit.EntityFrameworkCoreIntegration;
-    using MassTransit.Futures;
-    using Microsoft.ApplicationInsights.DependencyCollector;
-    using Microsoft.ApplicationInsights.Extensibility;
-    using Microsoft.AspNetCore.Builder;
-    using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-    using Microsoft.AspNetCore.Hosting;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.EntityFrameworkCore;
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.DependencyInjection.Extensions;
-    using Microsoft.Extensions.Diagnostics.HealthChecks;
-    using Microsoft.Extensions.Hosting;
-    using Microsoft.OpenApi.Models;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
-    using Services;
+    static bool? _isRunningInContainer;
 
-
-    public class Startup
+    public Startup(IConfiguration configuration)
     {
-        static bool? _isRunningInContainer;
+        Configuration = configuration;
+    }
 
-        public Startup(IConfiguration configuration)
+    IConfiguration Configuration { get; }
+
+    static bool IsRunningInContainer =>
+        _isRunningInContainer ??= bool.TryParse(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), out var inContainer) && inContainer;
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.TryAddScoped<IItineraryPlanner<OrderBurger>, BurgerItineraryPlanner>();
+        services.TryAddSingleton<IGrill, Grill>();
+        services.TryAddSingleton<IFryer, Fryer>();
+        services.TryAddSingleton<IShakeMachine, ShakeMachine>();
+
+        services.AddApplicationInsightsTelemetry(options =>
         {
-            Configuration = configuration;
-        }
+            options.EnableDependencyTrackingTelemetryModule = true;
+        });
+        services.AddApplicationInsightsTelemetryProcessor<NoSqlTelemetryProcessor>();
 
-        IConfiguration Configuration { get; }
-
-        static bool IsRunningInContainer =>
-            _isRunningInContainer ??= bool.TryParse(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), out var inContainer) && inContainer;
-
-        public void ConfigureServices(IServiceCollection services)
+        services.ConfigureTelemetryModule<DependencyTrackingTelemetryModule>((module, o) =>
         {
-            services.TryAddScoped<IItineraryPlanner<OrderBurger>, BurgerItineraryPlanner>();
-            services.TryAddSingleton<IGrill, Grill>();
-            services.TryAddSingleton<IFryer, Fryer>();
-            services.TryAddSingleton<IShakeMachine, ShakeMachine>();
+            module.IncludeDiagnosticSourceActivities.Add("MassTransit");
+        });
+            
+        services.AddSingleton<ITelemetryInitializer, HttpDependenciesParsingTelemetryInitializer>();
 
-            services.AddApplicationInsightsTelemetry(options =>
-            {
-                options.EnableDependencyTrackingTelemetryModule = true;
-            });
-            services.AddApplicationInsightsTelemetryProcessor<NoSqlTelemetryProcessor>();
-
-            services.ConfigureTelemetryModule<DependencyTrackingTelemetryModule>((module, o) =>
-            {
-                module.IncludeDiagnosticSourceActivities.Add("MassTransit");
-            });
-            services.AddSingleton<ITelemetryInitializer, HttpDependenciesParsingTelemetryInitializer>();
-
-            services.AddDbContext<ForkJointSagaDbContext>(builder =>
-                builder.UseSqlServer(GetConnectionString(), m =>
+        services.AddOpenTelemetryTracing(builder =>
+        {
+            var resource = ResourceBuilder.CreateDefault()
+                .AddService("api")
+                .AddTelemetrySdk()
+                .AddEnvironmentVariableDetector();
+            
+            builder.SetResourceBuilder(resource)
+                .AddSource("MassTransit")
+                .AddAspNetCoreInstrumentation()
+                .AddJaegerExporter(o =>
                 {
-                    m.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name);
-                    m.MigrationsHistoryTable($"__{nameof(ForkJointSagaDbContext)}");
-                }));
-
-            services.AddMassTransit(x =>
-                {
-                    x.ApplyCustomMassTransitConfiguration();
-
-                    x.AddDelayedMessageScheduler();
-
-                    x.SetEntityFrameworkSagaRepositoryProvider(r =>
+                    o.AgentHost = IsRunningInContainer ? "jaeger" : "localhost";
+                    o.AgentPort = 6831;
+                    o.MaxPayloadSizeInBytes = 4096;
+                    o.ExportProcessorType = ExportProcessorType.Batch;
+                    o.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
                     {
-                        r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
-                        r.LockStatementProvider = new SqlServerLockStatementProvider();
-
-                        r.ExistingDbContext<ForkJointSagaDbContext>();
-                    });
-
-                    x.AddConsumersFromNamespaceContaining<CookOnionRingsConsumer>();
-
-                    x.AddActivitiesFromNamespaceContaining<GrillBurgerActivity>();
-
-                    x.AddFuturesFromNamespaceContaining<OrderFuture>();
-
-                    x.AddSagaRepository<FutureState>()
-                        .EntityFrameworkRepository(r =>
-                        {
-                            r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
-                            r.LockStatementProvider = new SqlServerLockStatementProvider();
-
-                            r.ExistingDbContext<ForkJointSagaDbContext>();
-                        });
-
-                    x.UsingRabbitMq((context, cfg) =>
-                    {
-                        cfg.AutoStart = true;
-
-                        cfg.ApplyCustomBusConfiguration();
-
-                        if (IsRunningInContainer)
-                            cfg.Host("rabbitmq");
-
-                        cfg.UseDelayedMessageScheduler();
-
-                        cfg.ConfigureEndpoints(context);
-                    });
+                        MaxQueueSize = 2048,
+                        ScheduledDelayMilliseconds = 5000,
+                        ExporterTimeoutMilliseconds = 30000,
+                        MaxExportBatchSize = 512,
+                    };
                 });
-
-            services.AddControllers();
-            services.AddSwaggerGen(c =>
+        });
+            
+        services.AddDbContext<ForkJointSagaDbContext>(builder =>
+            builder.UseSqlServer(GetConnectionString(), m =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Title = "ForkJoint.Api",
-                    Version = "v1"
-                });
+                m.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name);
+                m.MigrationsHistoryTable($"__{nameof(ForkJointSagaDbContext)}");
+            }));
+
+        services.AddMassTransit(x =>
+        {
+            x.ApplyCustomMassTransitConfiguration();
+
+            x.AddDelayedMessageScheduler();
+
+            x.SetEntityFrameworkSagaRepositoryProvider(r =>
+            {
+                r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
+                r.LockStatementProvider = new SqlServerLockStatementProvider();
+
+                r.ExistingDbContext<ForkJointSagaDbContext>();
             });
-        }
 
-        string GetConnectionString()
-        {
-            var connectionString = Configuration.GetConnectionString("ForkJoint");
+            x.AddConsumersFromNamespaceContaining<CookOnionRingsConsumer>();
 
-            if (IsRunningInContainer)
-                connectionString = connectionString.Replace("localhost", "mssql");
+            x.AddActivitiesFromNamespaceContaining<GrillBurgerActivity>();
 
-            return connectionString;
-        }
+            x.AddFuturesFromNamespaceContaining<OrderFuture>();
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ForkJoint.Api v1"));
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-
-                endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions
+            x.AddSagaRepository<FutureState>()
+                .EntityFrameworkRepository(r =>
                 {
-                    Predicate = check => check.Tags.Contains("ready"),
-                    ResponseWriter = HealthCheckResponseWriter
+                    r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
+                    r.LockStatementProvider = new SqlServerLockStatementProvider();
+
+                    r.ExistingDbContext<ForkJointSagaDbContext>();
                 });
 
-                endpoints.MapHealthChecks("/health/live", new HealthCheckOptions {ResponseWriter = HealthCheckResponseWriter});
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                cfg.AutoStart = true;
+
+                cfg.ApplyCustomBusConfiguration();
+
+                if (IsRunningInContainer)
+                    cfg.Host("rabbitmq");
+
+                cfg.UseDelayedMessageScheduler();
+
+                cfg.ConfigureEndpoints(context);
             });
-        }
+        });
 
-        static Task HealthCheckResponseWriter(HttpContext context, HealthReport result)
+        services.AddControllers();
+        services.AddSwaggerGen(c =>
         {
-            var json = new JObject(
-                new JProperty("status", result.Status.ToString()),
-                new JProperty("results", new JObject(result.Entries.Select(entry => new JProperty(entry.Key, new JObject(
-                    new JProperty("status", entry.Value.Status.ToString()),
-                    new JProperty("description", entry.Value.Description),
-                    new JProperty("data", JObject.FromObject(entry.Value.Data))))))));
+            c.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "ForkJoint.Api",
+                Version = "v1"
+            });
+        });
+    }
 
-            context.Response.ContentType = "application/json";
+    string GetConnectionString()
+    {
+        var connectionString = Configuration.GetConnectionString("ForkJoint");
 
-            return context.Response.WriteAsync(json.ToString(Formatting.Indented));
+        if (IsRunningInContainer)
+            connectionString = connectionString.Replace("localhost", "mssql");
+
+        return connectionString;
+    }
+
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ForkJoint.Api v1"));
         }
+        
+        app.UseSerilogRequestLogging();
+
+        app.UseHttpsRedirection();
+
+        app.UseRouting();
+
+        app.UseAuthorization();
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+
+            endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions
+            {
+                Predicate = check => check.Tags.Contains("ready"),
+                ResponseWriter = HealthCheckResponseWriter
+            });
+
+            endpoints.MapHealthChecks("/health/live", new HealthCheckOptions {ResponseWriter = HealthCheckResponseWriter});
+        });
+    }
+
+    static Task HealthCheckResponseWriter(HttpContext context, HealthReport result)
+    {
+        var json = new JObject(
+            new JProperty("status", result.Status.ToString()),
+            new JProperty("results", new JObject(result.Entries.Select(entry => new JProperty(entry.Key, new JObject(
+                new JProperty("status", entry.Value.Status.ToString()),
+                new JProperty("description", entry.Value.Description),
+                new JProperty("data", JObject.FromObject(entry.Value.Data))))))));
+
+        context.Response.ContentType = "application/json";
+
+        return context.Response.WriteAsync(json.ToString(Formatting.Indented));
     }
 }

@@ -1,14 +1,13 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+using System;
+
+
+public interface PourShake
 {
-    using System;
+    Guid OrderId { get; }
+    Guid OrderLineId { get; }
 
-
-    public interface PourShake
-    {
-        Guid OrderId { get; }
-        Guid OrderLineId { get; }
-
-        string Flavor { get; }
-        Size Size { get; }
-    }
+    string Flavor { get; }
+    Size Size { get; }
 }

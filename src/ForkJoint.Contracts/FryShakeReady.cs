@@ -1,13 +1,12 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+using System;
+
+
+public interface FryShakeReady
 {
-    using System;
-
-
-    public interface FryShakeReady
-    {
-        Guid OrderId { get; }
-        Guid OrderLineId { get; }
-        string Flavor { get; }
-        Size Size { get; }
-    }
+    Guid OrderId { get; }
+    Guid OrderLineId { get; }
+    string Flavor { get; }
+    Size Size { get; }
 }

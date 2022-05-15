@@ -1,14 +1,13 @@
-namespace ForkJoint.Contracts
+namespace ForkJoint.Contracts;
+
+using System;
+
+
+public interface ShakeReady
 {
-    using System;
+    Guid OrderId { get; }
+    Guid OrderLineId { get; }
 
-
-    public interface ShakeReady
-    {
-        Guid OrderId { get; }
-        Guid OrderLineId { get; }
-
-        string Flavor { get; }
-        Size Size { get; }
-    }
+    string Flavor { get; }
+    Size Size { get; }
 }
