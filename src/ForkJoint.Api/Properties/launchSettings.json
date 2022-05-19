@@ -20,15 +20,11 @@
     "ForkJoint.Api": {
       "commandName": "Project",
       "dotnetRunMessages": "true",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "launchUrl": "swagger",
       "applicationUrl": "https://localhost:5001;http://localhost:5000",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "JAEGER_AGENT_HOST": "jaeger",
-        "JAEGER_AGENT_PORT": 6831,
-        "JAEGER_SAMPLER_TYPE": "remote",
-        "JAEGER_SAMPLING_ENDPOINT": "http://jaeger:5778/sampling"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     }
   }

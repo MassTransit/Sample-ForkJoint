@@ -8,9 +8,12 @@ Fork Joint is a fictional restaurant built during Season 3 of the MassTransit Li
 
 The sample application can be run using Docker, however, there are a couple setup tasks required.
 
+- Start all the services `docker compose -f .\docker-compose.services.yml up -d`
+- Stopping all the services `docker compose -f .\docker-compose.services.yml down -v`
+
 ### Certificate Setup
 
-The `docker-compose.yml` maps the local ASP.NET certificate folder into the container so that HTTPS can be used. This is different depending upon your operating system.
+The `docker-compose.api.yml` maps the local ASP.NET certificate folder into the container so that HTTPS can be used. This is different depending upon your operating system.
 
 > I use a Mac with JetBrains Rider, so my configuration is in the GitHub repository. 
 
@@ -30,9 +33,9 @@ dotnet dev-certs https -ep %USERPROFILE%\.aspnet\https\aspnetapp.pfx -p Pass0wrd
 dotnet dev-certs https --trust
 ```
 
-You may need to modify the `docker-compose.yml` file to match your path for Windows.
+You may need to modify the `docker-compose.api.yml` file to match your path for Windows.
 
-[See this page](https://docs.microsoft.com/en-us/aspnet/core/security/docker-https?view=aspnetcore-5.0) for more information, it was used to get this working on my machine.
+[See this page](https://docs.microsoft.com/en-us/aspnet/core/security/docker-https?view=aspnetcore-6.0) for more information, it was used to get this working on my machine.
 
 
 
@@ -45,3 +48,53 @@ You may need to modify the `docker-compose.yml` file to match your path for Wind
 ### Routing Slip
 
 ![Routing Slip](https://raw.githubusercontent.com/MassTransit/Sample-ForkJoint/master/assets/routingSlip.svg "Routing Slip")
+
+### Example SubmitOrder Post
+```
+POST https://localhost:5001/Order
+Content-Type: application/json
+
+{
+  "orderId": "{{$guid}}",
+  "burgers": [
+    {
+      "burgerId": "{{$guid}}",
+      "weight": 2,
+      "lettuce": false,
+      "cheese": true,
+      "pickle": true,
+      "onion": true,
+      "ketchup": true,
+      "mustard": true,
+      "barbecueSauce": true,
+      "onionRing": true
+    }
+  ],
+  "fries": [
+    {
+      "fryId": "{{$guid}}",
+      "size": 1
+    }
+  ],
+  "shakes": [
+    {
+      "shakeId": "{{$guid}}",
+      "flavor": "Strawberry",
+      "size": 1
+    }
+  ],
+  "fryShakes": [
+    {
+      "fryShakeId": "{{$guid}}",
+      "flavor": "Banna",
+      "size": 1
+    }
+  ]
+}
+```
+
+### Logging and OpenTelemetry Links
+
+- [Seq](https://datalust.co/) - http://localhost:5341
+- [Grafana](https://grafana.com/docs/tempo/latest/) - http://localhost:3001
+- [Jaegar](https://www.jaegertracing.io/) - http://localhost:16686

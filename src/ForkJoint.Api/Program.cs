@@ -1,3 +1,5 @@
+using Serilog.Sinks.Grafana.Loki;
+
 namespace ForkJoint.Api;
 
 using System;
@@ -32,7 +34,8 @@ public class Program
             .Enrich.WithProcessId()
             .Enrich.WithExceptionDetails()
             .WriteTo.Console()
-            .WriteTo.Seq(!IsRunningInContainer ? "http://localhost:5341" : "http://seq:5341", controlLevelSwitch: levelSwitch)
+            .WriteTo.Seq(IsRunningInContainer ? "http://seq:5341" : "http://localhost:5341", controlLevelSwitch: levelSwitch)
+            .WriteTo.GrafanaLoki(IsRunningInContainer ? "http://loki:3100" : "http://localhost:3100")
             .CreateLogger();
         
         try

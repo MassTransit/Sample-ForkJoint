@@ -1,3 +1,6 @@
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Metrics;
+
 namespace ForkJoint.Api;
 
 using System;
@@ -69,21 +72,61 @@ public class Startup
             
         services.AddSingleton<ITelemetryInitializer, HttpDependenciesParsingTelemetryInitializer>();
 
+        services.AddOpenTelemetryMetrics(builder =>
+        {
+            builder
+                .AddMeter("MassTransit")
+                .SetResourceBuilder(ResourceBuilder.CreateDefault()
+                    .AddService("ForkJoint.Api")
+                    .AddTelemetrySdk()
+                    .AddEnvironmentVariableDetector())
+                .AddOtlpExporter(o =>
+                {
+                    o.Endpoint = new Uri(IsRunningInContainer ? "http://grafana-agent:14317" : "http://localhost:14317");
+                    o.Protocol = OtlpExportProtocol.Grpc;
+                    o.ExportProcessorType = ExportProcessorType.Batch;
+                    o.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
+                    {
+                        MaxQueueSize = 2048,
+                        ScheduledDelayMilliseconds = 5000,
+                        ExporterTimeoutMilliseconds = 30000,
+                        MaxExportBatchSize = 512,
+                    };  
+                });
+        });
+        
         services.AddOpenTelemetryTracing(builder =>
         {
-            var resource = ResourceBuilder.CreateDefault()
-                .AddService("api")
-                .AddTelemetrySdk()
-                .AddEnvironmentVariableDetector();
-            
-            builder.SetResourceBuilder(resource)
+            builder
                 .AddSource("MassTransit")
+                .SetResourceBuilder(ResourceBuilder.CreateDefault()
+                    .AddService("ForkJoint.Api")
+                    .AddTelemetrySdk()
+                    .AddEnvironmentVariableDetector())
                 .AddAspNetCoreInstrumentation()
+                .AddSqlClientInstrumentation(o =>
+                {
+                    o.EnableConnectionLevelAttributes = true;
+                    o.RecordException = true;
+                    o.SetDbStatementForText = true;
+                    o.SetDbStatementForStoredProcedure = true;
+                })
+                .AddOtlpExporter(o =>
+                {
+                    o.Endpoint = new Uri(IsRunningInContainer ? "http://tempo:4317" : "http://localhost:4317");
+                    o.Protocol = OtlpExportProtocol.Grpc;
+                    o.ExportProcessorType = ExportProcessorType.Batch;
+                    o.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
+                    {
+                        MaxQueueSize = 2048,
+                        ScheduledDelayMilliseconds = 5000,
+                        ExporterTimeoutMilliseconds = 30000,
+                        MaxExportBatchSize = 512,
+                    };
+                })
                 .AddJaegerExporter(o =>
                 {
-                    o.AgentHost = IsRunningInContainer ? "jaeger" : "localhost";
-                    o.AgentPort = 6831;
-                    o.MaxPayloadSizeInBytes = 4096;
+                    o.Endpoint = new Uri(IsRunningInContainer ? "http://jaeger:6831" : "http://localhost:6831");
                     o.ExportProcessorType = ExportProcessorType.Batch;
                     o.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
                     {
@@ -134,6 +177,8 @@ public class Startup
             x.UsingRabbitMq((context, cfg) =>
             {
                 cfg.AutoStart = true;
+                
+                cfg.UseInstrumentation();
 
                 cfg.ApplyCustomBusConfiguration();
 
