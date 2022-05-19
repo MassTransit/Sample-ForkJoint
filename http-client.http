@@ -1,0 +1,42 @@
+# @name=order
+
+POST https://localhost:5001/Order
+Content-Type: application/json
+
+{
+  "orderId": "{{$guid}}",
+  "burgers": [
+    {
+      "burgerId": "{{$guid}}",
+      "weight": 2,
+      "lettuce": false,
+      "cheese": true,
+      "pickle": true,
+      "onion": true,
+      "ketchup": true,
+      "mustard": true,
+      "barbecueSauce": true,
+      "onionRing": true
+    }
+  ],
+  "fries": [
+    {
+      "fryId": "{{$guid}}",
+      "size": 1
+    }
+  ],
+  "shakes": [
+    {
+      "shakeId": "{{$guid}}",
+      "flavor": "Strawberry",
+      "size": 1
+    }
+  ],
+  "fryShakes": [
+    {
+      "fryShakeId": "{{$guid}}",
+      "flavor": "Banna",
+      "size": 1
+    }
+  ]
+}

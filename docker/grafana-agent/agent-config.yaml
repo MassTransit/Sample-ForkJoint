@@ -1,0 +1,11 @@
+﻿traces:
+  configs:
+    - name: default
+      remote_write:
+        - endpoint: tempo:4317
+          insecure: true
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+            http:
