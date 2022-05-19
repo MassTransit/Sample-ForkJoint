@@ -1,5 +1,3 @@
-using Serilog.Sinks.Grafana.Loki;
-
 namespace ForkJoint.Api;
 
 using System;
@@ -10,9 +8,15 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Core;
 using Serilog.Exceptions;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Extensions.DependencyInjection;
+using Serilog.Enrichers.Span;
+using Serilog.Sinks.Grafana.Loki;
 
 public class Program
-{
+{ 
+    static LoggingLevelSwitch _levelSwitch = new() { MinimumLevel = LogEventLevel.Verbose };
+    
     static bool? _isRunningInContainer;
     
     static bool IsRunningInContainer =>
@@ -20,23 +24,11 @@ public class Program
     
     public static int Main(string[] args)
     {
-        var levelSwitch = new LoggingLevelSwitch { MinimumLevel = LogEventLevel.Verbose };
-        
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-            .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
-            .MinimumLevel.ControlledBy(levelSwitch)
-            .Destructure.UsingAttributes()
-            .Enrich.FromLogContext()
-            .Enrich.WithThreadId()
-            .Enrich.WithEnvironmentName()
-            .Enrich.WithMachineName()
-            .Enrich.WithProcessId()
-            .Enrich.WithExceptionDetails()
-            .WriteTo.Console()
-            .WriteTo.Seq(IsRunningInContainer ? "http://seq:5341" : "http://localhost:5341", controlLevelSwitch: levelSwitch)
+            .ConfigureDefaults(_levelSwitch)
+            .WriteTo.Seq(IsRunningInContainer ? "http://seq:5341" : "http://localhost:5341", controlLevelSwitch: _levelSwitch)
             .WriteTo.GrafanaLoki(IsRunningInContainer ? "http://loki:3100" : "http://localhost:3100")
-            .CreateLogger();
+            .CreateBootstrapLogger();
         
         try
         {
@@ -58,7 +50,15 @@ public class Program
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
         return Host.CreateDefaultBuilder(args)
-            .UseSerilog()
+            .UseSerilog((context, services, loggerConfiguration) =>
+            {
+                loggerConfiguration
+                    .ConfigureDefaults(_levelSwitch)
+                    .WriteTo.Console()
+                    .WriteTo.Seq(IsRunningInContainer ? "http://seq:5341" : "http://localhost:5341", controlLevelSwitch: _levelSwitch)
+                    .WriteTo.GrafanaLoki(IsRunningInContainer ? "http://loki:3100" : "http://localhost:3100")
+                    .WriteTo.ApplicationInsights(services.GetRequiredService<TelemetryConfiguration>(), TelemetryConverter.Traces);
+            })
             .ConfigureWebHostDefaults(webBuilder =>
             {
                 webBuilder

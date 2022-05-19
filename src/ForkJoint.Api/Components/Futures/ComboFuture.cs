@@ -3,8 +3,6 @@ namespace ForkJoint.Api.Components.Futures;
 using System.Linq;
 using Contracts;
 using MassTransit;
-using MassTransit.Futures;
-
 
 public class ComboFuture :
     Future<OrderCombo, ComboCompleted>
@@ -13,7 +11,7 @@ public class ComboFuture :
     {
         Event(() => CommandReceived, x => x.CorrelateById(context => context.Message.OrderLineId));
 
-        var fry = SendRequest<OrderFry>(x =>
+        SendRequest<OrderFry>(x =>
             {
                 x.UsingRequestInitializer(context => new
                 {
@@ -26,7 +24,7 @@ public class ComboFuture :
             })
             .OnResponseReceived<FryCompleted>(x => x.CompletePendingRequest(message => message.OrderLineId));
 
-        var shake = SendRequest<OrderShake>(x =>
+        SendRequest<OrderShake>(x =>
             {
                 x.UsingRequestInitializer(context => new
                 {
