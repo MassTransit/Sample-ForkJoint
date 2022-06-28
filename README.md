@@ -8,6 +8,7 @@ Fork Joint is a fictional restaurant built during Season 3 of the MassTransit Li
 
 The sample application can be run using Docker, however, there are a couple setup tasks required.
 
+- Install Loki docker plugin `docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions`
 - Start all the services `docker compose -f .\docker-compose.services.yml up -d`
 - Stopping all the services `docker compose -f .\docker-compose.services.yml down -v`
 
