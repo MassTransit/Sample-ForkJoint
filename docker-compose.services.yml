@@ -1,6 +1,7 @@
 version: "3.8"
 
-x-loki-logging: &loki-logging
+x-loki-logging:
+  &loki-logging
   driver: loki
   options:
     loki-url: http://localhost:3100/loki/api/v1/push
@@ -17,22 +18,22 @@ services:
       - "5672:5672"
       - "15672:15672"
       - "15692:15692"
-  
+
   mssql:
-    image: "mcr.microsoft.com/mssql/server:2017-latest"
+    image: "mcr.microsoft.com/azure-sql-edge:latest"
     environment:
       - "ACCEPT_EULA=Y"
       - "SA_PASSWORD=Password12!"
     ports:
       - 1433:1433
-  
+
   seq:
     image: datalust/seq:latest
     environment:
       ACCEPT_EULA: "Y"
     ports:
       - "5341:80"
-  
+
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports:
@@ -51,7 +52,7 @@ services:
     command:
       - -config.file=/etc/tempo-config.yaml
     ports:
-      - "4317:4317"  # gRPC
+      - "4317:4317" # gRPC
     depends_on:
       - loki
     logging: *loki-logging
@@ -77,13 +78,13 @@ services:
     configs:
       - source: prometheus-config
         target: /etc/prometheus.yaml
-        
+
   grafana-agent:
     image: grafana/agent:latest
     command: "-config.file=/etc/agent-config.yaml"
     ports:
-      - "14317:4317"   # gRPC
-      - "14318:4318"   # http
+      - "14317:4317" # gRPC
+      - "14318:4318" # http
     configs:
       - source: grafana-agent-config
         target: /etc/agent-config.yaml
