@@ -1,44 +1,31 @@
-﻿namespace ForkJoint.Api.Controllers;
+namespace ForkJoint.Api;
 
+using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Contracts;
 using MassTransit;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Models;
+using Microsoft.AspNetCore.Routing;
 
 
-[ApiController]
-[Route("[controller]")]
-public class OrderController :
-    ControllerBase
+public static class OrderRoutes
 {
-    readonly IRequestClient<SubmitOrder> _client;
-
-    public OrderController(IRequestClient<SubmitOrder> client)
+    public static IEndpointRouteBuilder MapOrderRoutes(this IEndpointRouteBuilder builder)
     {
-        _client = client;
+        builder.MapPost("/order", SubmitOrder);
+
+        return builder;
     }
 
-    /// <summary>
-    /// Submits an order
-    /// <param name="order">The order model</param>
-    /// <response code="200">The order has been completed</response>
-    /// <response code="202">The order has been accepted but not yet completed</response>
-    /// <response code="400">The order could not be completed</response>
-    /// </summary>
-    /// <param name="order"></param>
-    /// <returns></returns>
-    [HttpPost]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status202Accepted)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Post(Order order)
+    static async Task<IResult> SubmitOrder(Order order, IRequestClient<SubmitOrder> client, CancellationToken cancellationToken)
     {
         try
         {
-            Response response = await _client.GetResponse<OrderCompleted, OrderFaulted>(new
+            Response response = await client.GetResponse<OrderCompleted, OrderFaulted>(new
             {
                 order.OrderId,
                 order.Burgers,
@@ -49,7 +36,7 @@ public class OrderController :
 
             return response switch
             {
-                (_, OrderCompleted completed) => Ok(new
+                (_, OrderCompleted completed) => TypedResults.Ok(new
                 {
                     completed.OrderId,
                     completed.Created,
@@ -61,7 +48,7 @@ public class OrderController :
                         x.Value.Description,
                     })
                 }),
-                (_, OrderFaulted faulted) => BadRequest(new
+                (_, OrderFaulted faulted) => TypedResults.BadRequest(new
                 {
                     faulted.OrderId,
                     faulted.Created,
@@ -78,16 +65,28 @@ public class OrderController :
                         Reason = x.Value.GetExceptionMessages(),
                     })
                 }),
-                _ => BadRequest()
+                _ => TypedResults.BadRequest()
             };
         }
         catch (RequestTimeoutException)
         {
-            return Accepted(new
+            return TypedResults.Accepted($"/order/{order.OrderId}", new
             {
                 order.OrderId,
                 Accepted = order.Burgers.Select(x => x.BurgerId).ToArray()
             });
         }
+    }
+
+
+    public class Order
+    {
+        [Required]
+        public Guid OrderId { get; init; }
+
+        public Burger[] Burgers { get; init; }
+        public Fry[] Fries { get; init; }
+        public Shake[] Shakes { get; init; }
+        public FryShake[] FryShakes { get; init; }
     }
 }

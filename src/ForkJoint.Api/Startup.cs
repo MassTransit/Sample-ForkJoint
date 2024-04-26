@@ -12,6 +12,7 @@ using Components.ItineraryPlanners;
 using Contracts;
 using MassTransit;
 using MassTransit.EntityFrameworkCoreIntegration;
+using MassTransit.Metadata;
 using Microsoft.ApplicationInsights.DependencyCollector;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
@@ -36,8 +37,6 @@ using Services;
 
 public class Startup
 {
-    static bool? _isRunningInContainer;
-
     public Startup(IConfiguration configuration)
     {
         Configuration = configuration;
@@ -45,11 +44,10 @@ public class Startup
 
     IConfiguration Configuration { get; }
 
-    static bool IsRunningInContainer =>
-        _isRunningInContainer ??= bool.TryParse(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), out var inContainer) && inContainer;
-
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddEndpointsApiExplorer();
+        
         services.TryAddScoped<IItineraryPlanner<OrderBurger>, BurgerItineraryPlanner>();
         services.TryAddSingleton<IGrill, Grill>();
         services.TryAddSingleton<IFryer, Fryer>();
@@ -79,7 +77,7 @@ public class Startup
                         .AddEnvironmentVariableDetector())
                     .AddOtlpExporter(o =>
                     {
-                        o.Endpoint = new Uri(IsRunningInContainer ? "http://grafana-agent:14317" : "http://localhost:14317");
+                        o.Endpoint = new Uri(HostMetadataCache.IsRunningInContainer ? "http://grafana-agent:14317" : "http://localhost:14317");
                         o.Protocol = OtlpExportProtocol.Grpc;
                         o.ExportProcessorType = ExportProcessorType.Batch;
                         o.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
@@ -109,7 +107,7 @@ public class Startup
                     })
                     .AddOtlpExporter(o =>
                     {
-                        o.Endpoint = new Uri(IsRunningInContainer ? "http://tempo:4317" : "http://localhost:4317");
+                        o.Endpoint = new Uri(HostMetadataCache.IsRunningInContainer ? "http://tempo:4317" : "http://localhost:4317");
                         o.Protocol = OtlpExportProtocol.Grpc;
                         o.ExportProcessorType = ExportProcessorType.Batch;
                         o.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
@@ -122,7 +120,7 @@ public class Startup
                     })
                     .AddJaegerExporter(o =>
                     {
-                        o.Endpoint = new Uri(IsRunningInContainer ? "http://jaeger:6831" : "http://localhost:6831");
+                        o.Endpoint = new Uri(HostMetadataCache.IsRunningInContainer ? "http://jaeger:6831" : "http://localhost:6831");
                         o.ExportProcessorType = ExportProcessorType.Batch;
                         o.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
                         {
@@ -178,7 +176,7 @@ public class Startup
 
                 cfg.ApplyCustomBusConfiguration();
 
-                if (IsRunningInContainer)
+                if (HostMetadataCache.IsRunningInContainer)
                     cfg.Host("rabbitmq");
 
                 cfg.UseDelayedMessageScheduler();
@@ -187,7 +185,6 @@ public class Startup
             });
         });
 
-        services.AddControllers();
         services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo
@@ -202,7 +199,7 @@ public class Startup
     {
         var connectionString = Configuration.GetConnectionString("ForkJoint");
 
-        if (IsRunningInContainer)
+        if (HostMetadataCache.IsRunningInContainer)
             connectionString = connectionString.Replace("localhost", "mssql");
 
         return connectionString;
@@ -223,8 +220,6 @@ public class Startup
 
         app.UseRouting();
 
-        app.UseAuthorization();
-
         static Task HealthCheckResponseWriter(HttpContext context, HealthReport result)
         {
             context.Response.ContentType = "application/json";
@@ -234,8 +229,8 @@ public class Startup
 
         app.UseEndpoints(endpoints =>
         {
-            endpoints.MapControllers();
-
+            endpoints.MapOrderRoutes();
+            
             endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions
             {
                 Predicate = check => check.Tags.Contains("ready"),
