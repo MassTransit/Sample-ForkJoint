@@ -7,6 +7,7 @@ using Serilog.Enrichers.Span;
 using Serilog.Events;
 using Serilog.Exceptions;
 
+
 public static class LoggerConfigurationExtensions
 {
     public static LoggerConfiguration ConfigureDefaults(this LoggerConfiguration loggerConfiguration, LoggingLevelSwitch levelSwitch)
@@ -14,6 +15,8 @@ public static class LoggerConfigurationExtensions
         loggerConfiguration
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+            .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
             .MinimumLevel.ControlledBy(levelSwitch)
             .Destructure.UsingAttributes()
             .Enrich.FromLogContext()

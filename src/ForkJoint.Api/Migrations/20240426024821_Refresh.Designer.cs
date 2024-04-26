@@ -7,21 +7,25 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
+#nullable disable
+
 namespace ForkJoint.Api.Migrations
 {
     [DbContext(typeof(ForkJointSagaDbContext))]
-    [Migration("20210513153116_v720update")]
-    partial class v720update
+    [Migration("20240426024821_Refresh")]
+    partial class Refresh
     {
+        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.11")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                .HasAnnotation("ProductVersion", "8.0.4")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            modelBuilder.Entity("MassTransit.Futures.FutureState", b =>
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("MassTransit.FutureState", b =>
                 {
                     b.Property<Guid>("CorrelationId")
                         .HasColumnType("uniqueidentifier");
@@ -52,6 +56,9 @@ namespace ForkJoint.Api.Migrations
 
                     b.Property<string>("Results")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<string>("Subscriptions")
                         .HasColumnType("nvarchar(max)");

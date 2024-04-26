@@ -4,10 +4,10 @@ POST https://localhost:5001/Order
 Content-Type: application/json
 
 {
-  "orderId": "{{$guid}}",
+  "orderId": "{{$random.uuid}}",
   "burgers": [
     {
-      "burgerId": "{{$guid}}",
+      "burgerId": "{{$random.uuid}}",
       "weight": 2,
       "lettuce": false,
       "cheese": true,
@@ -21,20 +21,20 @@ Content-Type: application/json
   ],
   "fries": [
     {
-      "fryId": "{{$guid}}",
+      "fryId": "{{$random.uuid}}",
       "size": 1
     }
   ],
   "shakes": [
     {
-      "shakeId": "{{$guid}}",
+      "shakeId": "{{$random.uuid}}",
       "flavor": "Strawberry",
       "size": 1
     }
   ],
   "fryShakes": [
     {
-      "fryShakeId": "{{$guid}}",
+      "fryShakeId": "{{$random.uuid}}",
       "flavor": "Banna",
       "size": 1
     }

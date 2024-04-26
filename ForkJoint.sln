@@ -9,6 +9,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForkJoint.Contracts", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForkJoint.Tests", "tests\ForkJoint.Tests\ForkJoint.Tests.csproj", "{85451494-70F7-4F2E-85B3-36F7AA0EC7F0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".solution", ".solution", "{B0136921-E71A-4A56-9B9D-A717D2CA15C7}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.api.yml = docker-compose.api.yml
+		docker-compose.services.yml = docker-compose.services.yml
+		README.md = README.md
+		src\Dockerfile.api = src\Dockerfile.api
+		http-client.http = http-client.http
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
